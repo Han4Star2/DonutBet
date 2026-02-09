@@ -101,7 +101,6 @@ app.get("/auth/discord", (req, res) => {
   res.redirect(url);
 });
 
-// Callback von Discord
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
 
@@ -129,19 +128,18 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     console.log("User logged in:", discordId, username);
 
-    // User in DB speichern / aktualisieren
     db.run(`
       INSERT INTO users (discord_id, username, coins)
       VALUES (?, ?, 100)
       ON CONFLICT(discord_id) DO UPDATE SET username=excluded.username
     `, [discordId, username]);
 
-    // Weiterleitung ans Frontend mit discordId
     res.redirect(`/?discordId=${discordId}`);
 
   } catch (err) {
-    console.log(err);
-    res.send("Fehler beim Discord-Login");
+    // Detailliertes Logging für Discord Fehler
+    console.error("Discord OAuth Error:", err.response?.data || err.message);
+    res.send(`Fehler beim Discord-Login:<br>${JSON.stringify(err.response?.data || err.message)}`);
   }
 });
 
