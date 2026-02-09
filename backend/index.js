@@ -1,20 +1,22 @@
+import express from "express";
+import sqlite3 from "sqlite3";
+import cors from "cors";
+import crypto from "crypto";
+import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.static(__dirname));
-
-import express from "express";
-import sqlite3 from "sqlite3";
-import cors from "cors";
-import crypto from "crypto";
-import axios from "axios";
-
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// ------------------------
+// Statische Dateien ausliefern
+// ------------------------
+app.use(express.static(__dirname));
 
 // ------------------------
 // Startseite
@@ -25,9 +27,6 @@ app.get("/", (req, res) => {
     <p><a href="/auth/discord">Login mit Discord</a></p>
   `);
 });
-
-res.redirect(`/?discordId=${discordId}`);
-
 
 // ------------------------
 // Datenbank initialisieren
@@ -79,8 +78,8 @@ app.post("/confirm-payment", (req, res) => {
     [Date.now(), username, amount]
   );
 
-  // Optional: Coins automatisch hinzufügen, z. B. 1 Coin pro $1
-  const coinsToAdd = amount; // einfach Beispiel
+  // Coins automatisch hinzufügen (1 Coin pro 1 Einheit)
+  const coinsToAdd = amount;
   db.run(
     `UPDATE users SET coins = coins + ? WHERE username=?`,
     [coinsToAdd, username]
@@ -93,21 +92,20 @@ app.post("/confirm-payment", (req, res) => {
 // Discord OAuth2 Login
 // ------------------------
 const CLIENT_ID = "1470520069086904456"; // Deine echte Client ID
-const CLIENT_SECRET = "Y9TBbIElTU0MoH6VodaG5J-Sgj2jTUlw"; // Dein Client Secret
+const CLIENT_SECRET = "DEIN_CLIENT_SECRET_HIER"; // Dein Client Secret
 const REDIRECT_URI = "https://donutbet.up.railway.app/auth/discord/callback"; // Railway URL + Callback
 
-// 1) Login starten
+// Login starten
 app.get("/auth/discord", (req, res) => {
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
   res.redirect(url);
 });
 
-// 2) Callback von Discord
+// Callback von Discord
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
 
   try {
-    // Token von Discord holen
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
@@ -122,7 +120,6 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // Userdaten abrufen
     const userRes = await axios.get("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
@@ -139,7 +136,9 @@ app.get("/auth/discord/callback", async (req, res) => {
       ON CONFLICT(discord_id) DO UPDATE SET username=excluded.username
     `, [discordId, username]);
 
-    res.send(`Hi ${username}, Login erfolgreich!`);
+    // Weiterleitung ans Frontend mit discordId
+    res.redirect(`/?discordId=${discordId}`);
+
   } catch (err) {
     console.log(err);
     res.send("Fehler beim Discord-Login");
@@ -158,10 +157,13 @@ app.get("/get-coins/:discordId", (req, res) => {
 });
 
 // ------------------------
-// Coins ändern (z. B. für Spiele)
-function changeCoins(discordId, amount) {
-  db.run(`UPDATE users SET coins = coins + ? WHERE discord_id=?`, [amount, discordId]);
-}
+// Coins ändern (für Spiele)
+app.get("/change-coins/:discordId/:amount", (req, res) => {
+  const { discordId, amount } = req.params;
+  const a = parseInt(amount);
+  db.run(`UPDATE users SET coins = coins + ? WHERE discord_id=?`, [a, discordId]);
+  res.send("ok");
+});
 
 // ------------------------
 // Payment Status abfragen
@@ -180,11 +182,4 @@ app.get("/payment-status/:id", (req, res) => {
 // ------------------------
 app.listen(process.env.PORT || 3000, () => {
   console.log("Backend läuft");
-});
-
-app.get("/change-coins/:discordId/:amount", (req, res) => {
-  const { discordId, amount } = req.params;
-  const a = parseInt(amount);
-  db.run(`UPDATE users SET coins = coins + ? WHERE discord_id=?`, [a, discordId]);
-  res.send("ok");
 });
