@@ -9,31 +9,52 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0a0f2c, #001236); /* Dunkelblau / Schwarz */
+  background: linear-gradient(135deg, #0a0f2c, #001236);
+  color: #ffd700;
+}
+
+header {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 30px;
+  box-sizing: border-box;
+}
+
+#loginBtn {
+  background: linear-gradient(135deg, #001236, #0a0f2c);
+  color: #ffd700;
+  border-radius: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+}
+
+#loginBtn:hover { transform: scale(1.05); }
+
+#profilePic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: none;
+  cursor: pointer;
+}
+
+main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #ffd700; /* Gold Akzent */
-}
-
-h1 {
-  margin-top: 20px;
-  font-size: 2rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
-
-/* Seitencontainer */
-#home, #games, #coinflip {
-  display: none;
-  width: 100%;
-  max-width: 500px;
-  text-align: center;
   margin-top: 30px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 
-/* Buttons */
-button {
-  margin: 10px;
+.games-list button {
+  width: 80%;
+  margin: 10px 0;
   padding: 15px 30px;
   border: none;
   border-radius: 12px;
@@ -42,34 +63,16 @@ button {
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  font-size: 1.1rem;
-  user-select: none;
 }
 
-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 15px rgba(255,215,0,0.3);
+.games-list button:hover { transform: scale(1.05); }
+
+.disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
-button:active {
-  transform: scale(1.2);
-  box-shadow: 0 12px 20px rgba(255,215,0,0.5);
-}
-
-/* Input */
-input[type="number"] {
-  padding: 10px 15px;
-  margin-top: 15px;
-  font-size: 1.1rem;
-  border-radius: 10px;
-  border: none;
-  text-align: center;
-  width: 120px;
-  background-color: #001236;
-  color: #ffd700;
-}
-
-/* Coinflip */
+/* Coinflip Styles */
 .coinflip-container {
   display: flex;
   flex-direction: column;
@@ -80,7 +83,7 @@ input[type="number"] {
 .coin {
   width: 150px;
   height: 150px;
-  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b); /* goldene Münze */
+  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
   border-radius: 50%;
   box-shadow: 0 10px 25px rgba(0,0,0,0.6);
   margin-bottom: 30px;
@@ -94,88 +97,111 @@ input[type="number"] {
   min-height: 40px;
 }
 
-.games-list button {
-  width: 80%;
-  margin: 10px 0;
+input[type="number"] {
+  padding: 10px 15px;
+  margin-top: 15px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: none;
+  text-align: center;
+  width: 120px;
+  background-color: #001236;
+  color: #ffd700;
 }
 </style>
 </head>
 <body>
 
-<h1>DonutBet</h1>
+<header>
+  <button id="loginBtn">Login mit Discord</button>
+  <img id="profilePic" src="" alt="Profilbild">
+</header>
 
-<!-- Home / Login -->
-<div id="home">
-  <p><a href="/auth/discord"><button>Login mit Discord</button></a></p>
-</div>
-
-<!-- Spieleübersicht -->
-<div id="games">
-  <h2>Spiele</h2>
+<main>
+  <h1>Spieleübersicht</h1>
   <div class="games-list">
-    <button id="coinflipBtn">Coinflip</button>
-    <!-- TODO: Hier später weitere Spiele wie Blackjack hinzufügen -->
+    <button id="coinflipBtn" class="disabled">Coinflip</button>
+    <!-- Später Blackjack usw -->
   </div>
-</div>
 
-<!-- Coinflip Seite -->
-<div id="coinflip">
-  <h2>Coinflip</h2>
-  <div class="coinflip-container">
-    <div class="coin" id="coin"></div>
-    <div>
-      <button id="headsBtn">Heads</button>
-      <button id="tailsBtn">Tails</button>
+  <!-- Coinflip Seite -->
+  <div id="coinflip" style="display:none;">
+    <h2>Coinflip</h2>
+    <div class="coinflip-container">
+      <div class="coin" id="coin"></div>
+      <div>
+        <button id="headsBtn" class="disabled">Heads</button>
+        <button id="tailsBtn" class="disabled">Tails</button>
+      </div>
+      <input type="number" id="betAmount" placeholder="Bet Amount" disabled />
+      <button id="betBtn" class="disabled">Bet</button>
+      <div class="result" id="resultText"></div>
     </div>
-    <input type="number" id="betAmount" placeholder="Bet Amount" />
-    <button id="betBtn">Bet</button>
-    <div class="result" id="resultText"></div>
   </div>
-</div>
+</main>
 
 <script>
 // --------------------
-// Seitenverwaltung
+// Login & Status
 // --------------------
-const home = document.getElementById("home");
-const games = document.getElementById("games");
-const coinflipPage = document.getElementById("coinflip");
+let loggedIn = false;
+let discordId = null;
+
+// Header Elemente
+const loginBtn = document.getElementById("loginBtn");
+const profilePic = document.getElementById("profilePic");
+
+// Spiele-Buttons
 const coinflipBtn = document.getElementById("coinflipBtn");
+const headsBtn = document.getElementById("headsBtn");
+const tailsBtn = document.getElementById("tailsBtn");
+const betBtn = document.getElementById("betBtn");
+const betAmount = document.getElementById("betAmount");
+const resultText = document.getElementById("resultText");
+const coinflipPage = document.getElementById("coinflip");
 
-// Zeige Home zuerst
-home.style.display = "block";
-
-// Discord Login Weiterleitung auslesen
-window.onload = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const page = urlParams.get("page");
-  if(page === "games") {
-    home.style.display = "none";
-    games.style.display = "block";
-  }
+// Login Button klick
+loginBtn.onclick = () => {
+  // Weiterleitung zu Discord Login
+  window.location.href = "/auth/discord";
 };
 
+// Simulierter Login Check (später von Backend)
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.get("discordId")) {
+  loggedIn = true;
+  discordId = urlParams.get("discordId");
+  loginBtn.style.display = "none";
+  profilePic.style.display = "block";
+  profilePic.src = `https://cdn.discordapp.com/avatars/${discordId}/avatar.png?size=128`;
+
+  // Buttons aktivieren
+  coinflipBtn.classList.remove("disabled");
+  headsBtn.classList.remove("disabled");
+  tailsBtn.classList.remove("disabled");
+  betBtn.classList.remove("disabled");
+  betAmount.disabled = false;
+}
+
+// --------------------
+// Coinflip Navigation
+// --------------------
 coinflipBtn.onclick = () => {
-  games.style.display = "none";
+  if(!loggedIn) {
+    alert("Du musst dich zuerst anmelden!");
+    return;
+  }
   coinflipPage.style.display = "block";
 };
 
 // --------------------
 // Coinflip Logic
 // --------------------
-const coin = document.getElementById("coin");
-const headsBtn = document.getElementById("headsBtn");
-const tailsBtn = document.getElementById("tailsBtn");
-const betBtn = document.getElementById("betBtn");
-const betAmount = document.getElementById("betAmount");
-const resultText = document.getElementById("resultText");
-
 let choice = "heads";
+headsBtn.onclick = () => choice="heads";
+tailsBtn.onclick = () => choice="tails";
 
-headsBtn.onclick = () => choice = "heads";
-tailsBtn.onclick = () => choice = "tails";
-
-// Buttons skalieren beim Halten (Mouse + Touch)
+// Buttons Hold Animation
 [headsBtn, tailsBtn].forEach(btn => {
   btn.addEventListener("mousedown", () => btn.style.transform = "scale(1.2)");
   btn.addEventListener("mouseup", () => btn.style.transform = "scale(1)");
@@ -184,7 +210,7 @@ tailsBtn.onclick = () => choice = "tails";
   btn.addEventListener("touchend", () => btn.style.transform = "scale(1)");
 });
 
-// Coinflip Bet Logic
+// Coinflip Bet
 betBtn.onclick = () => {
   const bet = parseInt(betAmount.value);
   if (!bet || bet <= 0) {
@@ -193,24 +219,23 @@ betBtn.onclick = () => {
   }
 
   // Münze drehen Animation
-  gsap.fromTo(coin, { rotationY: 0 }, { rotationY: 720, duration: 1, ease: "power2.inOut" });
+  gsap.fromTo(coin, { rotationY:0 }, { rotationY:720, duration:1, ease:"power2.inOut" });
 
-  // Zufallsergebnis
   const outcome = Math.random() < 0.5 ? "heads" : "tails";
 
   setTimeout(() => {
-    if (outcome === choice) {
+    if(outcome === choice) {
       resultText.textContent = `You Win! +${bet} Coins`;
       resultText.style.color = "#00ff00";
-      gsap.fromTo(resultText, { scale: 0.5, opacity: 0 }, { scale: 1.2, opacity:1, duration:0.5, ease:"back.out(1.7)" });
-      // TODO: Coins über Backend erhöhen
+      gsap.fromTo(resultText, {scale:0.5, opacity:0},{scale:1.2, opacity:1,duration:0.5, ease:"back.out(1.7)"});
+      // TODO: Coins Backend erhöhen
     } else {
       resultText.textContent = `You Lose! -${bet} Coins`;
       resultText.style.color = "#ff4d4d";
-      gsap.fromTo(resultText, { scale: 0.5, opacity: 0 }, { scale: 1, opacity:1, duration:0.5, ease:"power1.out" });
-      // TODO: Coins über Backend abziehen
+      gsap.fromTo(resultText, {scale:0.5, opacity:0},{scale:1, opacity:1,duration:0.5, ease:"power1.out"});
+      // TODO: Coins Backend abziehen
     }
-  }, 1000);
+  },1000);
 };
 </script>
 
