@@ -1,102 +1,201 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>DonutBet</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
-    button { padding: 10px 20px; margin: 5px; }
-    #coins { font-weight: bold; }
-    #log { margin-top: 20px; white-space: pre-line; background: #fff; padding: 10px; border: 1px solid #ccc; height: 200px; overflow-y: auto; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DonutBet</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.16.1/dist/gsap.min.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1e1e2f, #2e2e3f);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+}
+
+h1 {
+  margin-top: 20px;
+  font-size: 2rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+/* Home/Login */
+#home, #games, #coinflip {
+  display: none;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  margin-top: 30px;
+}
+
+button {
+  margin: 10px;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 1.1rem;
+  user-select: none;
+}
+
+button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+}
+
+button:active {
+  transform: scale(1.2);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.5);
+}
+
+input[type="number"] {
+  padding: 10px 15px;
+  margin-top: 15px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: none;
+  text-align: center;
+  width: 120px;
+}
+
+/* Coinflip */
+.coinflip-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.coin {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at 30% 30%, #ffce00, #ff9900);
+  border-radius: 50%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  margin-bottom: 30px;
+  perspective: 1000px;
+}
+
+.result {
+  margin-top: 25px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  min-height: 40px;
+}
+
+.games-list button {
+  width: 80%;
+  margin: 10px 0;
+}
+
+</style>
 </head>
 <body>
 
 <h1>DonutBet</h1>
-<p><button id="loginBtn">Mit Discord einloggen</button></p>
-<p>Coins: <span id="coins">0</span></p>
 
-<h2>Spiele</h2>
-<button id="coinflipBtn">Coinflip (10 Coins)</button>
-<button id="blackjackBtn">Blackjack (10 Coins)</button>
+<!-- Home / Login -->
+<div id="home">
+  <p><a href="/auth/discord"><button>Login mit Discord</button></a></p>
+</div>
 
-<div id="log"></div>
+<!-- Spieleübersicht -->
+<div id="games">
+  <h2>Spiele</h2>
+  <div class="games-list">
+    <button id="coinflipBtn">Coinflip</button>
+    <!-- später Blackjack Button -->
+  </div>
+</div>
+
+<!-- Coinflip Seite -->
+<div id="coinflip">
+  <h2>Coinflip</h2>
+  <div class="coinflip-container">
+    <div class="coin" id="coin"></div>
+    <div>
+      <button id="headsBtn">Heads</button>
+      <button id="tailsBtn">Tails</button>
+    </div>
+    <input type="number" id="betAmount" placeholder="Bet Amount" />
+    <button id="betBtn">Bet</button>
+    <div class="result" id="resultText"></div>
+  </div>
+</div>
 
 <script>
-const backend = "https://donutbet.up.railway.app"; // Dein Backend
+// Seiten Management
+const home = document.getElementById("home");
+const games = document.getElementById("games");
+const coinflipPage = document.getElementById("coinflip");
+const coinflipBtn = document.getElementById("coinflipBtn");
 
-let discordId = null; // Wird nach Login gesetzt
+// Zeige Home zuerst
+home.style.display = "block";
 
-// -----------------
-// Login
-// -----------------
-document.getElementById("loginBtn").onclick = () => {
-  window.location.href = `${backend}/auth/discord`;
+coinflipBtn.onclick = () => {
+  games.style.display = "none";
+  coinflipPage.style.display = "block";
 };
 
-// -----------------
-// Coins abfragen
-// -----------------
-async function updateCoins() {
-  if (!discordId) return;
-  const res = await fetch(`${backend}/get-coins/${discordId}`);
-  const data = await res.json();
-  document.getElementById("coins").innerText = data.coins;
-}
+// --------------------
+// Coinflip Logic
+// --------------------
+const coin = document.getElementById("coin");
+const headsBtn = document.getElementById("headsBtn");
+const tailsBtn = document.getElementById("tailsBtn");
+const betBtn = document.getElementById("betBtn");
+const betAmount = document.getElementById("betAmount");
+const resultText = document.getElementById("resultText");
 
-// -----------------
-// Coinflip
-// -----------------
-document.getElementById("coinflipBtn").onclick = async () => {
-  if (!discordId) { log("Bitte erst einloggen!"); return; }
-  const res = await fetch(`${backend}/get-coins/${discordId}`);
-  const coins = (await res.json()).coins;
-  if (coins < 10) { log("Nicht genug Coins!"); return; }
+let choice = "heads";
 
-  // 50/50 Gewinnchance
-  const win = Math.random() < 0.5;
-  fetch(`${backend}/change-coins/${discordId}/${win ? 10 : -10}`);
-  log(win ? "Du hast gewonnen! +10 Coins" : "Du hast verloren! -10 Coins");
-  updateCoins();
-};
+headsBtn.onclick = () => choice = "heads";
+tailsBtn.onclick = () => choice = "tails";
 
-// -----------------
-// Blackjack (vereinfachtes Beispiel)
-// -----------------
-document.getElementById("blackjackBtn").onclick = async () => {
-  if (!discordId) { log("Bitte erst einloggen!"); return; }
-  const res = await fetch(`${backend}/get-coins/${discordId}`);
-  const coins = (await res.json()).coins;
-  if (coins < 10) { log("Nicht genug Coins!"); return; }
+// Buttons skalieren beim Halten (Mouse + Touch)
+[headsBtn, tailsBtn].forEach(btn => {
+  btn.addEventListener("mousedown", () => btn.style.transform = "scale(1.2)");
+  btn.addEventListener("mouseup", () => btn.style.transform = "scale(1)");
+  btn.addEventListener("mouseleave", () => btn.style.transform = "scale(1)");
+  btn.addEventListener("touchstart", () => btn.style.transform = "scale(1.2)");
+  btn.addEventListener("touchend", () => btn.style.transform = "scale(1)");
+});
 
-  const win = Math.random() < 0.45; // leichter Nachteil
-  fetch(`${backend}/change-coins/${discordId}/${win ? 10 : -10}`);
-  log(win ? "Blackjack! +10 Coins" : "Verloren! -10 Coins");
-  updateCoins();
-};
-
-// -----------------
-// Logging
-// -----------------
-function log(msg) {
-  const el = document.getElementById("log");
-  el.innerText += msg + "\n";
-  el.scrollTop = el.scrollHeight;
-}
-
-// -----------------
-// Callback Discord-Login aus URL prüfen
-// -----------------
-function checkLogin() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("discordId")) {
-    discordId = params.get("discordId");
-    log("Erfolgreich eingeloggt!");
-    updateCoins();
+betBtn.onclick = () => {
+  const bet = parseInt(betAmount.value);
+  if (!bet || bet <= 0) {
+    alert("Enter a valid bet");
+    return;
   }
-}
 
-checkLogin();
+  // Münze drehen Animation
+  gsap.fromTo(coin, { rotationY: 0 }, { rotationY: 720, duration: 1, ease: "power2.inOut" });
+
+  // Zufallsergebnis
+  const outcome = Math.random() < 0.5 ? "heads" : "tails";
+
+  setTimeout(() => {
+    if (outcome === choice) {
+      resultText.textContent = `You Win! +${bet} Coins`;
+      resultText.style.color = "#00ff00";
+      gsap.fromTo(resultText, { scale: 0.5, opacity: 0 }, { scale: 1.2, opacity:1, duration:0.5, ease:"back.out(1.7)" });
+      // TODO: Coins über Backend erhöhen
+    } else {
+      resultText.textContent = `You Lose! -${bet} Coins`;
+      resultText.style.color = "#ff4d4d";
+      gsap.fromTo(resultText, { scale: 0.5, opacity: 0 }, { scale: 1, opacity:1, duration:0.5, ease:"power1.out" });
+      // TODO: Coins über Backend abziehen
+    }
+  }, 1000);
+};
 </script>
 
 </body>
