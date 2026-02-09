@@ -92,7 +92,7 @@ app.post("/confirm-payment", (req, res) => {
 // Discord OAuth2 Login
 // ------------------------
 const CLIENT_ID = "1470520069086904456"; // Deine echte Client ID
-const CLIENT_SECRET = "DEIN_CLIENT_SECRET_HIER"; // Dein Client Secret
+const CLIENT_SECRET = "Y9TBbIElTU0MoH6VodaG5J-Sgj2jTUlw"; // Dein Client Secret
 const REDIRECT_URI = "https://donutbet.up.railway.app/auth/discord/callback"; // Railway URL + Callback
 
 // Login starten
