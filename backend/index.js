@@ -60,7 +60,7 @@ app.post("/confirm-payment", (req, res) => {
 // ------------------------
 const CLIENT_ID = "1470520069086904456";
 const CLIENT_SECRET = "Y9TBbIElTU0MoH6VodaG5J-Sgj2jTUlw";
-const REDIRECT_URI = "https://discord.com/oauth2/authorize?client_id=1470520069086904456&response_type=code&redirect_uri=https%3A%2F%2Fdonutbet.up.railway.app%2F&scope=identify";  // später echte Railway URL eintragen
+const REDIRECT_URI = "https://donutbet.up.railway.app/auth/discord/callback";  // später echte Railway URL eintragen
 
 app.get("/auth/discord", (req, res) => {
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
