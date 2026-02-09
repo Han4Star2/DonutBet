@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>DonutBet</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    button { padding: 10px 20px; margin: 5px; }
+    #coins { font-weight: bold; }
+    #log { margin-top: 20px; white-space: pre-line; background: #fff; padding: 10px; border: 1px solid #ccc; height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+<h1>DonutBet</h1>
+<p><button id="loginBtn">Mit Discord einloggen</button></p>
+<p>Coins: <span id="coins">0</span></p>
+
+<h2>Spiele</h2>
+<button id="coinflipBtn">Coinflip (10 Coins)</button>
+<button id="blackjackBtn">Blackjack (10 Coins)</button>
+
+<div id="log"></div>
+
+<script>
+const backend = "https://donutbet.up.railway.app"; // Dein Backend
+
+let discordId = null; // Wird nach Login gesetzt
+
+// -----------------
+// Login
+// -----------------
+document.getElementById("loginBtn").onclick = () => {
+  window.location.href = `${backend}/auth/discord`;
+};
+
+// -----------------
+// Coins abfragen
+// -----------------
+async function updateCoins() {
+  if (!discordId) return;
+  const res = await fetch(`${backend}/get-coins/${discordId}`);
+  const data = await res.json();
+  document.getElementById("coins").innerText = data.coins;
+}
+
+// -----------------
+// Coinflip
+// -----------------
+document.getElementById("coinflipBtn").onclick = async () => {
+  if (!discordId) { log("Bitte erst einloggen!"); return; }
+  const res = await fetch(`${backend}/get-coins/${discordId}`);
+  const coins = (await res.json()).coins;
+  if (coins < 10) { log("Nicht genug Coins!"); return; }
+
+  // 50/50 Gewinnchance
+  const win = Math.random() < 0.5;
+  fetch(`${backend}/change-coins/${discordId}/${win ? 10 : -10}`);
+  log(win ? "Du hast gewonnen! +10 Coins" : "Du hast verloren! -10 Coins");
+  updateCoins();
+};
+
+// -----------------
+// Blackjack (vereinfachtes Beispiel)
+// -----------------
+document.getElementById("blackjackBtn").onclick = async () => {
+  if (!discordId) { log("Bitte erst einloggen!"); return; }
+  const res = await fetch(`${backend}/get-coins/${discordId}`);
+  const coins = (await res.json()).coins;
+  if (coins < 10) { log("Nicht genug Coins!"); return; }
+
+  const win = Math.random() < 0.45; // leichter Nachteil
+  fetch(`${backend}/change-coins/${discordId}/${win ? 10 : -10}`);
+  log(win ? "Blackjack! +10 Coins" : "Verloren! -10 Coins");
+  updateCoins();
+};
+
+// -----------------
+// Logging
+// -----------------
+function log(msg) {
+  const el = document.getElementById("log");
+  el.innerText += msg + "\n";
+  el.scrollTop = el.scrollHeight;
+}
+
+// -----------------
+// Callback Discord-Login aus URL prüfen
+// -----------------
+function checkLogin() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("discordId")) {
+    discordId = params.get("discordId");
+    log("Erfolgreich eingeloggt!");
+    updateCoins();
+  }
+}
+
+checkLogin();
+</script>
+
+</body>
+</html>
