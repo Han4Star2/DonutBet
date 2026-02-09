@@ -7,6 +7,10 @@ import axios from "axios";
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// ------------------------
+// Startseite
+// ------------------------
 app.get("/", (req, res) => {
   res.send(`
     <h2>Willkommen bei DonutBet!</h2>
@@ -14,9 +18,12 @@ app.get("/", (req, res) => {
   `);
 });
 
+// ------------------------
 // Datenbank initialisieren
+// ------------------------
 const db = new sqlite3.Database("payments.db");
 
+// Tabelle für Minecraft-Zahlungen
 db.run(`
 CREATE TABLE IF NOT EXISTS payments (
   id TEXT PRIMARY KEY,
@@ -25,6 +32,15 @@ CREATE TABLE IF NOT EXISTS payments (
   status TEXT,
   created_at INTEGER,
   confirmed_at INTEGER
+)
+`);
+
+// Tabelle für Discord-User + Coins
+db.run(`
+CREATE TABLE IF NOT EXISTS users (
+  discord_id TEXT PRIMARY KEY,
+  username TEXT,
+  coins INTEGER DEFAULT 0
 )
 `);
 
@@ -52,25 +68,35 @@ app.post("/confirm-payment", (req, res) => {
     [Date.now(), username, amount]
   );
 
+  // Optional: Coins automatisch hinzufügen, z. B. 1 Coin pro $1
+  const coinsToAdd = amount; // einfach Beispiel
+  db.run(
+    `UPDATE users SET coins = coins + ? WHERE username=?`,
+    [coinsToAdd, username]
+  );
+
   res.send("ok");
 });
 
 // ------------------------
 // Discord OAuth2 Login
 // ------------------------
-const CLIENT_ID = "1470520069086904456";
-const CLIENT_SECRET = "Y9TBbIElTU0MoH6VodaG5J-Sgj2jTUlw";
-const REDIRECT_URI = "https://donutbet.up.railway.app/auth/discord/callback";  // später echte Railway URL eintragen
+const CLIENT_ID = "1470520069086904456"; // Deine echte Client ID
+const CLIENT_SECRET = "Y9TBbIElTU0MoH6VodaG5J-Sgj2jTUlw"; // Dein Client Secret
+const REDIRECT_URI = "https://donutbet.up.railway.app/auth/discord/callback"; // Railway URL + Callback
 
+// 1) Login starten
 app.get("/auth/discord", (req, res) => {
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
   res.redirect(url);
 });
 
+// 2) Callback von Discord
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
 
   try {
+    // Token von Discord holen
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
@@ -85,6 +111,7 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
+    // Userdaten abrufen
     const userRes = await axios.get("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
@@ -94,6 +121,13 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     console.log("User logged in:", discordId, username);
 
+    // User in DB speichern / aktualisieren
+    db.run(`
+      INSERT INTO users (discord_id, username, coins)
+      VALUES (?, ?, 100)
+      ON CONFLICT(discord_id) DO UPDATE SET username=excluded.username
+    `, [discordId, username]);
+
     res.send(`Hi ${username}, Login erfolgreich!`);
   } catch (err) {
     console.log(err);
@@ -102,7 +136,24 @@ app.get("/auth/discord/callback", async (req, res) => {
 });
 
 // ------------------------
-// Payment Status Abfrage
+// Coins abfragen
+// ------------------------
+app.get("/get-coins/:discordId", (req, res) => {
+  const discordId = req.params.discordId;
+  db.get(`SELECT coins FROM users WHERE discord_id=?`, [discordId], (err, row) => {
+    if (!row) return res.json({ coins: 0 });
+    res.json({ coins: row.coins });
+  });
+});
+
+// ------------------------
+// Coins ändern (z. B. für Spiele)
+function changeCoins(discordId, amount) {
+  db.run(`UPDATE users SET coins = coins + ? WHERE discord_id=?`, [amount, discordId]);
+}
+
+// ------------------------
+// Payment Status abfragen
 // ------------------------
 app.get("/payment-status/:id", (req, res) => {
   db.get(
