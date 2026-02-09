@@ -18,6 +18,8 @@ app.get("/", (req, res) => {
   `);
 });
 
+res.redirect(`/?discordId=${discordId}`);
+
 // ------------------------
 // Datenbank initialisieren
 // ------------------------
@@ -169,4 +171,11 @@ app.get("/payment-status/:id", (req, res) => {
 // ------------------------
 app.listen(process.env.PORT || 3000, () => {
   console.log("Backend läuft");
+});
+
+app.get("/change-coins/:discordId/:amount", (req, res) => {
+  const { discordId, amount } = req.params;
+  const a = parseInt(amount);
+  db.run(`UPDATE users SET coins = coins + ? WHERE discord_id=?`, [a, discordId]);
+  res.send("ok");
 });
