@@ -7,6 +7,12 @@ import axios from "axios";
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.get("/", (req, res) => {
+  res.send(`
+    <h2>Willkommen bei DonutBet!</h2>
+    <p><a href="/auth/discord">Login mit Discord</a></p>
+  `);
+});
 
 // Datenbank initialisieren
 const db = new sqlite3.Database("payments.db");
