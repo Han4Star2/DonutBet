@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Arena - Real Money PvP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            text-align: center;
+            z-index: 10;
+        }
+
+        #loginScreen h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        #loginScreen p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-discord {
+            background: #5865F2;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Home Screen */
+        #homeScreen {
+            display: none;
+            text-align: center;
+            z-index: 10;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .coins-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #fbbf24;
+            text-shadow: 0 2px 8px rgba(251, 191, 36, 0.5);
+        }
+
+        .game-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.02);
+        }
+
+        .game-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-card p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .tournament-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        /* Game Screen */
+        #gameScreen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #1f2937;
+            border: 4px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .game-hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .hud-item {
+            background: rgba(0,0,0,0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hud-coins {
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .hud-kills {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .cashout-btn {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 20px 50px;
+            font-size: 1.4rem;
+        }
+
+        .cashing-out-indicator {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 200;
+        }
+
+        .cashing-out-indicator h2 {
+            font-size: 2.5rem;
+            color: #fbbf24;
+            margin-bottom: 1rem;
+        }
+
+        .cashing-out-indicator p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Result Screen */
+        #resultScreen {
+            display: none;
+            text-align: center;
+            z-index: 300;
+            background: rgba(0,0,0,0.95);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .result-content {
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .result-title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-success {
+            color: #10b981;
+        }
+
+        .result-failed {
+            color: #ef4444;
+        }
+
+        .result-stats {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .result-stat {
+            font-size: 1.5rem;
+            margin: 15px 0;
+        }
+
+        .result-stat-label {
+            opacity: 0.8;
+            margin-right: 10px;
+        }
+
+        .result-stat-value {
+            font-weight: bold;
+            font-size: 2rem;
+        }
+
+        .result-coins {
+            color: #fbbf24;
+        }
+
+        .result-kills {
+            color: #ef4444;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Snake colors */
+        .snake-player {
+            fill: #10b981;
+            stroke: #059669;
+        }
+
+        .snake-enemy {
+            fill: #ef4444;
+            stroke: #dc2626;
+        }
+
+        .snake-cashing-out {
+            fill: #fbbf24;
+            stroke: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <h1>🐍 Snake Arena</h1>
+            <p>Multiplayer Snake with Real Money</p>
+            <button class="btn btn-discord" onclick="loginWithDiscord()">
+                Login with Discord
+            </button>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            
+            <div class="user-info">
+                <h2>Welcome, <span id="username">Player</span>!</h2>
+                <div class="coins-display">
+                    💰 <span id="userCoins">0</span>
+                </div>
+            </div>
+
+            <div class="game-options">
+                <div class="game-card" onclick="startGame(false)">
+                    <h3>▶️ Play Game</h3>
+                    <p>Free entry • Compete for coins</p>
+                    <button class="btn btn-success">Start Playing</button>
+                </div>
+
+                <div class="game-card" onclick="startTournament()">
+                    <h3>🏆 High Stakes Tournament</h3>
+                    <div class="tournament-badge">5,000,000 COINS ENTRY</div>
+                    <p style="margin-top: 1rem;">Winner takes all</p>
+                    <button class="btn btn-warning">Join Tournament</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div class="game-hud">
+                <div class="hud-item">
+                    <span class="hud-coins">💰 <span id="gameCoins">0</span></span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-kills">💀 Kills: <span id="gameKills">0</span></span>
+                </div>
+                <div class="hud-item">
+                    <span id="gameSegments">Size: 3</span>
+                </div>
+            </div>
+
+            <button class="btn btn-warning cashout-btn" id="cashoutBtn" onclick="startCashout()">
+                Cash Out
+            </button>
+
+            <div class="cashing-out-indicator" id="cashingOutIndicator">
+                <h2>⏳ Cashing Out...</h2>
+                <p>Your snake is shrinking</p>
+                <p>Don't get killed!</p>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen">
+            <div class="result-content">
+                <h1 class="result-title" id="resultTitle">Game Over</h1>
+                
+                <div class="result-stats">
+                    <div class="result-stat">
+                        <span class="result-stat-label">Coins Earned:</span>
+                        <span class="result-stat-value result-coins" id="resultCoins">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-stat-label">Kills:</span>
+                        <span class="result-stat-value result-kills" id="resultKills">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-stat-label">Fee (5%):</span>
+                        <span class="result-stat-value" id="resultFee">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-stat-label">Total Balance:</span>
+                        <span class="result-stat-value result-coins" id="resultBalance">0</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="returnToHome()" style="font-size: 1.5rem; padding: 20px 60px;">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
