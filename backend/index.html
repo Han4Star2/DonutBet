@@ -628,8 +628,10 @@
 
         // ===== BACKEND INTEGRATION: CHECK LOGIN STATUS =====
         async function checkLoginStatus() {
-            const urlParams = new URLSearchParams(window.location.search);
-            discordId = urlParams.get('discordId');
+    // SIMULIERTE LOGIN-STATUS PRÜFUNG
+    isLoggedIn = false;
+    updateLoginState();
+}
             
             if (discordId) {
                 isLoggedIn = true;
@@ -660,9 +662,13 @@
 
         // ===== LOGIN SYSTEM =====
         loginBtn.addEventListener('click', () => {
-            // Backend Integration - Discord OAuth2
-            window.location.href = '/auth/discord';
-        });
+    // SIMULIERTER LOGIN
+    isLoggedIn = true;
+    username.textContent = "TestUser#0001";
+    profileImg.src = "https://via.placeholder.com/40";
+    userCoins = 1000;
+    updateLoginState();
+});
 
         function updateLoginState() {
             if (isLoggedIn) {
@@ -814,26 +820,52 @@
         });
 
         async function flipCoin() {
-            if (isFlipping) return;
-            if (!selectedChoice) {
-                alert('Wähle zuerst Heads oder Tails!');
-                return;
-            }
+    if (isFlipping) return;
+    if (!selectedChoice) {
+        alert('Wähle zuerst Heads oder Tails!');
+        return;
+    }
 
-            const betAmount = parseInt(betInput.value);
-            if (!betAmount || betAmount <= 0) {
-                alert('Gib einen gültigen Einsatz ein!');
-                return;
-            }
+    const betAmount = parseInt(betInput.value);
+    if (!betAmount || betAmount <= 0) {
+        alert('Gib einen gültigen Einsatz ein!');
+        return;
+    }
 
-            if (betAmount > userCoins) {
-                alert('Nicht genug Coins!');
-                return;
-            }
+    if (betAmount > userCoins) {
+        alert('Nicht genug Coins!');
+        return;
+    }
 
-            isFlipping = true;
-            betBtn.disabled = true;
+    isFlipping = true;
+    betBtn.disabled = true;
 
+    // SIMULIERTE SERVERLOGIK
+    const result = Math.random() < 0.5 ? 'heads' : 'tails';
+    const won = result === selectedChoice;
+
+    userCoins += won ? betAmount : -betAmount;
+    updateCoinDisplay();
+
+    // Münze drehen
+    const rotations = 5 + Math.floor(Math.random() * 3); // 5-7 Drehungen
+    const finalRotation = result === 'heads' ? 0 : 180;
+    const targetRotation = currentRotation + (rotations * 360) + finalRotation;
+
+    gsap.to(coin, {
+        rotationY: targetRotation,
+        duration: 3,
+        ease: "power2.out",
+        onComplete: () => {
+            currentRotation = targetRotation % 360;
+            showResult(won, betAmount);
+            setTimeout(() => {
+                isFlipping = false;
+                betBtn.disabled = false;
+            }, 3000);
+        }
+    });
+}
             try {
                 // Backend Integration - Send bet to server
                 const response = await fetch('/coinflip', {
