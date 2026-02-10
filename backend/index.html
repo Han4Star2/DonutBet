@@ -827,8 +827,43 @@
     betBtn.disabled = true;
 
     // SIMULIERTE SERVERLOGIK
-    const result = Math.random() < 0.5 ? 'heads' : 'tails';
-    const won = result === selectedChoice;
+    let result;
+let won;
+
+try {
+    const response = await fetch("/coinflip", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            discordId: discordId,
+            bet: betAmount,
+            choice: selectedChoice
+        })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert(data.error || "Fehler beim Coinflip");
+        isFlipping = false;
+        betBtn.disabled = false;
+        return;
+    }
+
+    result = data.result;   // "heads" oder "tails"
+    won = data.won;         // true / false
+    userCoins = data.coins; // neuer Kontostand vom Server
+    updateCoinDisplay();
+
+} catch (err) {
+    console.error(err);
+    alert("Server nicht erreichbar");
+    isFlipping = false;
+    betBtn.disabled = false;
+    return;
+}
 
     userCoins += won ? betAmount : -betAmount;
     updateCoinDisplay();
