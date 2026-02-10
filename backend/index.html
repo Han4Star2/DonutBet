@@ -947,8 +947,10 @@ updateCoinDisplay();
             delay: 0.3
         });
 
-        username.textContent = "Discord User";
-profileImg.src = `https://cdn.discordapp.com/avatars/${discordId}/avatar.png`;
+        if (isLoggedIn && discordId) {
+    username.textContent = "Discord User";
+    profileImg.src = `https://cdn.discordapp.com/avatars/${discordId}/avatar.png`;
+}
     </script>
 </body>
 </html>
