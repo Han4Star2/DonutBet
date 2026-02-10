@@ -578,15 +578,15 @@
             
             <div class="coin-container">
                 <div class="coin" id="coin">
-                    <div class="coin-face heads">H</div>
-                    <div class="coin-face tails">T</div>
+                    <div class="coin-face heads">♀</div>
+                    <div class="coin-face tails">🔱</div>
                 </div>
             </div>
 
             <div class="game-controls">
                 <div class="choice-buttons">
-                    <button class="choice-btn" data-choice="heads"><span style="font-size: 2rem; font-weight: 900; margin-right: 8px;">H</span>Heads</button>
-                    <button class="choice-btn" data-choice="tails"><span style="font-size: 2rem; font-weight: 900; margin-right: 8px;">T</span>Tails</button>
+                    <button class="choice-btn" data-choice="heads"><span style="font-size: 2rem; font-weight: 900; margin-right: 8px;">♀</span>Heads</button>
+                    <button class="choice-btn" data-choice="tails"><span style="font-size: 2rem; font-weight: 900; margin-right: 8px;">🔱</span>Tails</button>
                 </div>
 
                 <div class="bet-input-group">
@@ -828,42 +828,42 @@
 
     // SIMULIERTE SERVERLOGIK
     let result;
-let won;
+    let won;
 
-try {
-    const response = await fetch("/coinflip", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            discordId: discordId,
-            bet: betAmount,
-            choice: selectedChoice
-        })
-    });
+    try {
+        const response = await fetch("/coinflip", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                discordId: discordId,
+                bet: betAmount,
+                choice: selectedChoice
+            })
+        });
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (!response.ok) {
-        alert(data.error || "Fehler beim Coinflip");
+        if (!response.ok) {
+            alert(data.error || "Fehler beim Coinflip");
+            isFlipping = false;
+            betBtn.disabled = false;
+            return;
+        }
+
+        result = data.result;   // "heads" oder "tails"
+        won = data.won;         // true / false
+        userCoins = data.coins;
+        updateCoinDisplay();
+
+    } catch (err) {
+        console.error(err);
+        alert("Server nicht erreichbar");
         isFlipping = false;
         betBtn.disabled = false;
         return;
     }
-
-    result = data.result;   // "heads" oder "tails"
-    won = data.won;         // true / false
-    userCoins = data.coins;
-updateCoinDisplay();
-
-} catch (err) {
-    console.error(err);
-    alert("Server nicht erreichbar");
-    isFlipping = false;
-    betBtn.disabled = false;
-    return;
-}
 
     // Münze drehen
     const rotations = 5 + Math.floor(Math.random() * 3); // 5-7 Drehungen
@@ -875,7 +875,7 @@ updateCoinDisplay();
         duration: 3,
         ease: "power2.out",
         onComplete: () => {
-            currentRotation = targetRotation % 360;
+            currentRotation = targetRotation; // BEHEBUNG: Speichere volle Rotation!
             showResult(won, betAmount);
             setTimeout(() => {
                 isFlipping = false;
