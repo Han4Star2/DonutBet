@@ -628,46 +628,32 @@
 
         // ===== BACKEND INTEGRATION: CHECK LOGIN STATUS =====
         async function checkLoginStatus() {
-    // SIMULIERTE LOGIN-STATUS PRÜFUNG
-    isLoggedIn = false;
+    const params = new URLSearchParams(window.location.search);
+    discordId = params.get("discordId");
+
+    if (!discordId) {
+        isLoggedIn = false;
+        updateLoginState();
+        return;
+    }
+
+    isLoggedIn = true;
+
+    try {
+        const response = await fetch(`/get-coins/${discordId}`);
+        const data = await response.json();
+        userCoins = data.coins ?? 0;
+    } catch (e) {
+        console.error("Coins konnten nicht geladen werden", e);
+    }
+
     updateLoginState();
+    window.history.replaceState({}, document.title, "/");
 }
-            
-            if (discordId) {
-                isLoggedIn = true;
-                
-                // Coins vom Server abrufen
-                try {
-                    const response = await fetch(`/get-coins/${discordId}`);
-                    const data = await response.json();
-                    userCoins = data.coins;
-                    
-                    // Discord-Profildaten setzen (optional)
-                    if (data.username) {
-                        username.textContent = data.username;
-                    }
-                    if (data.avatar) {
-                        profileImg.src = data.avatar;
-                    }
-                } catch (error) {
-                    console.error('Fehler beim Abrufen der Coins:', error);
-                }
-                
-                updateLoginState();
-                
-                // URL bereinigen (discordId aus URL entfernen)
-                window.history.replaceState({}, document.title, "/");
-            }
-        }
 
         // ===== LOGIN SYSTEM =====
         loginBtn.addEventListener('click', () => {
-    // SIMULIERTER LOGIN
-    isLoggedIn = true;
-    username.textContent = "TestUser#0001";
-    profileImg.src = "https://via.placeholder.com/40";
-    userCoins = 1000;
-    updateLoginState();
+    window.location.href = "/auth/discord";
 });
 
         function updateLoginState() {
@@ -866,58 +852,6 @@
         }
     });
 }
-            try {
-                // Backend Integration - Send bet to server
-                const response = await fetch('/coinflip', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        discordId: discordId, 
-                        choice: selectedChoice, 
-                        amount: betAmount 
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Server-Fehler');
-                }
-
-                const data = await response.json();
-                const result = data.result; // 'heads' oder 'tails' vom Server
-                const won = result === selectedChoice;
-
-                // Coins vom Server aktualisieren
-                userCoins = data.newBalance;
-                updateCoinDisplay();
-
-                // Münze drehen - BUG FIX: Verwende currentRotation als Basis
-                const rotations = 5 + Math.floor(Math.random() * 3); // 5-7 Drehungen
-                const finalRotation = result === 'heads' ? 0 : 180;
-                const targetRotation = currentRotation + (rotations * 360) + finalRotation;
-
-                gsap.to(coin, {
-                    rotationY: targetRotation,
-                    duration: 3,
-                    ease: "power2.out",
-                    onComplete: () => {
-                        // Speichere die finale Rotation modulo 360
-                        currentRotation = targetRotation % 360;
-                        
-                        showResult(won, betAmount);
-
-                        setTimeout(() => {
-                            isFlipping = false;
-                            betBtn.disabled = false;
-                        }, 3000);
-                    }
-                });
-            } catch (error) {
-                console.error('Fehler beim Coinflip:', error);
-                alert('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
-                isFlipping = false;
-                betBtn.disabled = false;
-            }
-        }
 
         function showResult(won, amount) {
             resultText.className = 'result-text';
@@ -962,9 +896,7 @@
 
         // ===== INITIALIZATION =====
         // Prüfe Login-Status beim Laden
-        checkLoginStatus().then(() => {
-            updateLoginState();
-        });
+        checkLoginStatus();
 
         // Entrance Animation
         gsap.from('.logo', {
