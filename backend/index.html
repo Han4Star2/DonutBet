@@ -854,8 +854,8 @@ try {
 
     result = data.result;   // "heads" oder "tails"
     won = data.won;         // true / false
-    userCoins = data.coins; // neuer Kontostand vom Server
-    updateCoinDisplay();
+    userCoins = data.coins;
+updateCoinDisplay();
 
 } catch (err) {
     console.error(err);
@@ -864,9 +864,6 @@ try {
     betBtn.disabled = false;
     return;
 }
-
-    userCoins += won ? betAmount : -betAmount;
-    updateCoinDisplay();
 
     // Münze drehen
     const rotations = 5 + Math.floor(Math.random() * 3); // 5-7 Drehungen
@@ -949,6 +946,9 @@ try {
             ease: "power3.out",
             delay: 0.3
         });
+
+        username.textContent = "Discord User";
+profileImg.src = `https://cdn.discordapp.com/avatars/${discordId}/avatar.png`;
     </script>
 </body>
 </html>
