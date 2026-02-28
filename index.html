@@ -1,463 +1,1214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Arena - Real Money PvP</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>donutmarket.pro — DonutSMP Market Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  /* Blue-white palette */
+  --bg:     #f0f4fa;
+  --bg1:    #ffffff;
+  --bg2:    #f7f9fc;
+  --bg3:    #eef2f8;
+  --border: #dde4f0;
+  --border2:#c8d3e8;
+  --txt:    #0f1829;
+  --txt2:   #4a5878;
+  --txt3:   #8a97b4;
+  --blue:   #2563eb;
+  --blue-l: #3b82f6;
+  --blue-d: #1d4ed8;
+  --blue-bg:rgba(37,99,235,.07);
+  --blue-br:rgba(37,99,235,.2);
+  --red:    #ef4444;
+  --red-bg: rgba(239,68,68,.07);
+  --green:  #16a34a;
+  --green-bg:rgba(22,163,74,.07);
+  --gold:   #d97706;
+  --r: 12px;
+  --font: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--font);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            overflow: hidden;
-            height: 100vh;
-        }
+/* ── SUBTLE BG GRADIENT ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(37,99,235,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(59,130,246,.04) 0%, transparent 60%);
+}
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            position: relative;
-        }
+/* ════════ NAV ════════ */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 600;
+  padding: 12px 24px;
+}
+.navi {
+  max-width: 1320px; margin: 0 auto;
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 9px 18px;
+  box-shadow: 0 2px 16px rgba(37,99,235,.06);
+}
+.logo { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-d));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(37,99,235,.3);
+  overflow: hidden;
+}
+.logo-mark img { width: 20px; height: 20px; image-rendering: crisp-edges; }
+.logo-word { font-size: .9rem; font-weight: 700; letter-spacing: -.03em; color: var(--txt); }
+.logo-word b { color: var(--blue); }
+.nsearch { flex: 1; max-width: 360px; position: relative; }
+.nsearch svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--txt3); pointer-events: none; }
+#srch {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px 8px 34px;
+  color: var(--txt); font-family: var(--font); font-size: .875rem;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+#srch::placeholder { color: var(--txt3); }
+#srch:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-bg); }
 
-        /* Login Screen */
-        #loginScreen {
-            text-align: center;
-            z-index: 10;
-        }
+/* ════════ HERO ════════ */
+.hero {
+  position: relative; z-index: 1;
+  max-width: 1320px; margin: 0 auto;
+  padding: 100px 28px 36px;
+}
+.hero-h {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 800; letter-spacing: -.04em; line-height: 1.1;
+  color: var(--txt);
+}
+.hero-h span { color: var(--blue); }
 
-        #loginScreen h1 {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
+/* ════════ CONTENT ════════ */
+.content {
+  position: relative; z-index: 1;
+  max-width: 1320px; margin: 0 auto;
+  padding: 24px 28px 100px;
+}
 
-        #loginScreen p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
+/* Section header */
+.sec-hdr {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-top: 40px;
+}
+.sec-hdr:first-child { margin-top: 0; }
+.sec-name { font-size: .95rem; font-weight: 700; letter-spacing: -.02em; color: var(--txt); }
+.sec-ct {
+  font-size: .68rem; font-family: var(--mono); color: var(--txt3);
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 2px 8px; margin-left: auto;
+}
 
-        .btn {
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
+/* ════════ GRID ════════ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 10px;
+}
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
+/* ════════ CARD ════════ */
+.card {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px; cursor: pointer;
+  transition: border-color .18s, box-shadow .22s, transform .22s cubic-bezier(.34,1.4,.64,1);
+  opacity: 0; transform: translateY(16px);
+  will-change: transform, opacity;
+}
+.card:hover {
+  border-color: var(--blue-br);
+  box-shadow: 0 8px 28px rgba(37,99,235,.1), 0 0 0 1px var(--blue-br);
+  transform: translateY(-3px) scale(1.01);
+}
+.card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+.cimg {
+  width: 44px; height: 44px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.cimg img {
+  width: 36px; height: 36px;
+  image-rendering: crisp-edges; object-fit: contain; display: block;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.card:hover .cimg img { transform: scale(1.18) rotate(-4deg); }
+.cname {
+  font-size: .83rem; font-weight: 600; letter-spacing: -.01em;
+  line-height: 1.3; color: var(--txt); word-break: break-word;
+}
+.cid { font-size: .62rem; font-family: var(--mono); color: var(--txt3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cprice {
+  font-size: 1.1rem; font-weight: 700; font-family: var(--mono);
+  color: var(--txt); letter-spacing: -.02em; line-height: 1;
+}
+.cp64 { font-size: .7rem; font-family: var(--mono); color: var(--txt3); margin-top: 3px; }
+.cp64 b { color: var(--gold); }
+.sp-wrap { height: 32px; margin: 9px 0 6px; position: relative; }
+.sp-wrap canvas { position: absolute; inset: 0; width: 100%!important; height: 32px!important; }
+.cbot { display: flex; align-items: center; justify-content: space-between; }
+.cchg {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: .69rem; font-weight: 600; font-family: var(--mono);
+  padding: 2px 7px; border-radius: 4px;
+}
+.cchg.up { background: var(--green-bg); color: var(--green); }
+.cchg.dn { background: var(--red-bg); color: var(--red); }
+.cchg.fl { background: var(--bg3); color: var(--txt3); }
+.csrc { display: flex; align-items: center; gap: 3px; }
+.spill {
+  font-size: .6rem; font-weight: 600; font-family: var(--mono);
+  padding: 2px 6px; border-radius: 3px; border: 1px solid;
+}
+.spill.a { color: var(--gold); border-color: rgba(217,119,6,.25); background: rgba(217,119,6,.07); }
+.spill.o { color: var(--blue); border-color: var(--blue-br); background: var(--blue-bg); }
+.spill.e { color: var(--txt3); border-color: var(--border); }
 
-        .btn-discord {
-            background: #5865F2;
-            color: white;
-        }
+/* ════════ MODAL ════════ */
+#mbg {
+  position: fixed; inset: 0; z-index: 900;
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(0,0,0,0);
+  backdrop-filter: blur(0px);
+}
+#mbg.open { display: flex; }
+.mbox {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%; max-width: 660px;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 32px 80px rgba(15,24,41,.18);
+  transform: scale(.93) translateY(20px); opacity: 0;
+  transition: transform .3s cubic-bezier(.34,1.5,.64,1), opacity .24s ease;
+}
+#mbg.open .mbox { transform: none; opacity: 1; }
+.mhdr {
+  position: sticky; top: 0; background: var(--bg1); z-index: 2;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
+}
+.mthumb {
+  width: 52px; height: 52px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.mthumb img { width: 40px; height: 40px; image-rendering: crisp-edges; object-fit: contain; }
+.mtitle { font-size: 1.1rem; font-weight: 700; letter-spacing: -.025em; color: var(--txt); }
+.mid { font-size: .72rem; font-family: var(--mono); color: var(--txt3); margin-top: 2px; }
+.mcls {
+  margin-left: auto; width: 30px; height: 30px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 7px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .82rem; color: var(--txt2); flex-shrink: 0;
+  transition: all .15s;
+}
+.mcls:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.mbody { padding: 20px 22px 26px; }
 
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
+/* Stats row */
+.mstats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 22px; }
+.mst { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.msl { font-size: .63rem; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--txt3); margin-bottom: 5px; }
+.msv { font-size: 1rem; font-weight: 700; font-family: var(--mono); letter-spacing: -.02em; }
+.msv.blue { color: var(--blue); }
+.msv.gold { color: var(--gold); }
+.msv.red { color: var(--red); }
+.msv.green { color: var(--green); }
 
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
+/* Chart */
+.mchrt-hdr { display: flex; align-items: center; margin-bottom: 10px; }
+.mchrt-title { font-size: .84rem; font-weight: 600; color: var(--txt2); }
+.rtabs { display: flex; gap: 3px; margin-left: auto; }
+.rtab {
+  font-size: .67rem; font-weight: 600; font-family: var(--mono);
+  padding: 3px 9px; border-radius: 5px;
+  border: 1px solid var(--border); color: var(--txt3);
+  cursor: pointer; transition: all .12s;
+}
+.rtab.on { background: var(--blue-bg); border-color: var(--blue-br); color: var(--blue); }
+.chrtbox {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; height: 220px;
+}
+.chrtbox canvas { width: 100%!important; height: 192px!important; }
 
-        .btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
+/* ════════ LOADER ════════ */
+#ldr {
+  position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+.l-mark {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-d));
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  animation: lflt 2s ease-in-out infinite;
+  overflow: hidden;
+}
+.l-mark img { width: 30px; height: 30px; image-rendering: crisp-edges; }
+@keyframes lflt { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.l-bar { width: 140px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
+.l-fill { height: 100%; background: linear-gradient(90deg, var(--blue-l), var(--blue)); border-radius: 1px; animation: lfill 1.8s ease-in-out forwards; }
+@keyframes lfill { from{width:0} to{width:100%} }
+.l-txt { font-size: .75rem; color: var(--txt3); font-family: var(--mono); }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        /* Home Screen */
-        #homeScreen {
-            display: none;
-            text-align: center;
-            z-index: 10;
-            max-width: 600px;
-            width: 90%;
-        }
-
-        .user-info {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .user-info h2 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .coins-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #fbbf24;
-            text-shadow: 0 2px 8px rgba(251, 191, 36, 0.5);
-        }
-
-        .game-options {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .game-card {
-            background: rgba(255,255,255,0.15);
-            padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .game-card:hover {
-            background: rgba(255,255,255,0.25);
-            transform: scale(1.02);
-        }
-
-        .game-card h3 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .game-card p {
-            font-size: 1rem;
-            opacity: 0.9;
-            margin-bottom: 1rem;
-        }
-
-        .tournament-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #1f2937;
-        }
-
-        /* Game Screen */
-        #gameScreen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        #gameCanvas {
-            display: block;
-            background: #1f2937;
-            border: 4px solid rgba(255,255,255,0.3);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-
-        .game-hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .hud-item {
-            background: rgba(0,0,0,0.7);
-            padding: 15px 25px;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .hud-coins {
-            color: #fbbf24;
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-
-        .hud-kills {
-            color: #ef4444;
-            font-weight: bold;
-        }
-
-        .cashout-btn {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            padding: 20px 50px;
-            font-size: 1.4rem;
-        }
-
-        .cashing-out-indicator {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            padding: 40px 60px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 200;
-        }
-
-        .cashing-out-indicator h2 {
-            font-size: 2.5rem;
-            color: #fbbf24;
-            margin-bottom: 1rem;
-        }
-
-        .cashing-out-indicator p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        /* Result Screen */
-        #resultScreen {
-            display: none;
-            text-align: center;
-            z-index: 300;
-            background: rgba(0,0,0,0.95);
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .result-content {
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .result-title {
-            font-size: 3rem;
-            margin-bottom: 2rem;
-        }
-
-        .result-success {
-            color: #10b981;
-        }
-
-        .result-failed {
-            color: #ef4444;
-        }
-
-        .result-stats {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 2rem;
-        }
-
-        .result-stat {
-            font-size: 1.5rem;
-            margin: 15px 0;
-        }
-
-        .result-stat-label {
-            opacity: 0.8;
-            margin-right: 10px;
-        }
-
-        .result-stat-value {
-            font-weight: bold;
-            font-size: 2rem;
-        }
-
-        .result-coins {
-            color: #fbbf24;
-        }
-
-        .result-kills {
-            color: #ef4444;
-        }
-
-        .logout-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            font-size: 1.5rem;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Snake colors */
-        .snake-player {
-            fill: #10b981;
-            stroke: #059669;
-        }
-
-        .snake-enemy {
-            fill: #ef4444;
-            stroke: #dc2626;
-        }
-
-        .snake-cashing-out {
-            fill: #fbbf24;
-            stroke: #f59e0b;
-        }
-    </style>
+/* ════════ RESPONSIVE ════════ */
+@media(max-width:700px){
+  .hero { padding: 88px 18px 28px; }
+  .content { padding: 18px 18px 80px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(152px,1fr)); gap: 8px; }
+  .mstats { grid-template-columns: 1fr 1fr; }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- Login Screen -->
-        <div id="loginScreen">
-            <h1>🐍 Snake Arena</h1>
-            <p>Multiplayer Snake with Real Money</p>
-            <button class="btn btn-discord" onclick="loginWithDiscord()">
-                Login with Discord
-            </button>
-        </div>
 
-        <!-- Home Screen -->
-        <div id="homeScreen">
-            <button class="logout-btn" onclick="logout()">Logout</button>
-            
-            <div class="user-info">
-                <h2>Welcome, <span id="username">Player</span>!</h2>
-                <div class="coins-display">
-                    💰 <span id="userCoins">0</span>
-                </div>
-            </div>
+<!-- LOADER -->
+<div id="ldr">
+  <div class="l-mark"><img id="l-img" src="" alt=""></div>
+  <div class="l-bar"><div class="l-fill"></div></div>
+  <div class="l-txt" id="ltxt">Connecting…</div>
+</div>
 
-            <div class="game-options">
-                <div class="game-card" onclick="startGame(false)">
-                    <h3>▶️ Play Game</h3>
-                    <p>Free entry • Compete for coins</p>
-                    <button class="btn btn-success">Start Playing</button>
-                </div>
-
-                <div class="game-card" onclick="startTournament()">
-                    <h3>🏆 High Stakes Tournament</h3>
-                    <div class="tournament-badge">5,000,000 COINS ENTRY</div>
-                    <p style="margin-top: 1rem;">Winner takes all</p>
-                    <button class="btn btn-warning">Join Tournament</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="gameScreen">
-            <canvas id="gameCanvas"></canvas>
-            
-            <div class="game-hud">
-                <div class="hud-item">
-                    <span class="hud-coins">💰 <span id="gameCoins">0</span></span>
-                </div>
-                <div class="hud-item">
-                    <span class="hud-kills">💀 Kills: <span id="gameKills">0</span></span>
-                </div>
-                <div class="hud-item">
-                    <span id="gameSegments">Size: 3</span>
-                </div>
-            </div>
-
-            <button class="btn btn-warning cashout-btn" id="cashoutBtn" onclick="startCashout()">
-                Cash Out
-            </button>
-
-            <div class="cashing-out-indicator" id="cashingOutIndicator">
-                <h2>⏳ Cashing Out...</h2>
-                <p>Your snake is shrinking</p>
-                <p>Don't get killed!</p>
-            </div>
-        </div>
-
-        <!-- Result Screen -->
-        <div id="resultScreen">
-            <div class="result-content">
-                <h1 class="result-title" id="resultTitle">Game Over</h1>
-                
-                <div class="result-stats">
-                    <div class="result-stat">
-                        <span class="result-stat-label">Coins Earned:</span>
-                        <span class="result-stat-value result-coins" id="resultCoins">0</span>
-                    </div>
-                    <div class="result-stat">
-                        <span class="result-stat-label">Kills:</span>
-                        <span class="result-stat-value result-kills" id="resultKills">0</span>
-                    </div>
-                    <div class="result-stat">
-                        <span class="result-stat-label">Fee (5%):</span>
-                        <span class="result-stat-value" id="resultFee">0</span>
-                    </div>
-                    <div class="result-stat">
-                        <span class="result-stat-label">Total Balance:</span>
-                        <span class="result-stat-value result-coins" id="resultBalance">0</span>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary" onclick="returnToHome()" style="font-size: 1.5rem; padding: 20px 60px;">
-                    Continue
-                </button>
-            </div>
-        </div>
+<!-- NAV -->
+<div id="nav">
+  <div class="navi">
+    <div class="logo">
+      <div class="logo-mark"><img id="nav-logo-img" src="" alt=""></div>
+      <div class="logo-word">donut<b>market</b>.pro</div>
     </div>
+    <div class="nsearch">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="srch" type="text" placeholder="Search any item…" autocomplete="off">
+    </div>
+  </div>
+</div>
 
-    <script src="game.js"></script>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-h"><span>DonutSMP</span> Market</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="content"></div>
+
+<!-- MODAL -->
+<div id="mbg" onclick="bgClick(event)">
+  <div class="mbox" id="mbox">
+    <div class="mhdr">
+      <div class="mthumb" id="m-thumb"></div>
+      <div>
+        <div class="mtitle" id="m-title">—</div>
+        <div class="mid" id="m-id">—</div>
+      </div>
+      <button class="mcls" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mstats">
+        <div class="mst"><div class="msl">Lowest Price</div><div class="msv blue" id="m-lp">—</div></div>
+        <div class="mst"><div class="msl">x64 Stack</div><div class="msv gold" id="m-p64">—</div></div>
+        <div class="mst"><div class="msl">24h Change</div><div class="msv" id="m-chg">—</div></div>
+        <div class="mst"><div class="msl">7d High</div><div class="msv" id="m-7h">—</div></div>
+        <div class="mst"><div class="msl">7d Low</div><div class="msv" id="m-7l">—</div></div>
+        <div class="mst"><div class="msl">Auction Price</div><div class="msv gold" id="m-ap">—</div></div>
+      </div>
+      <div class="mchrt-hdr">
+        <div class="mchrt-title">Price History</div>
+        <div class="rtabs" id="rtabs">
+          <div class="rtab on" data-r="today">Today</div>
+          <div class="rtab" data-r="7">7D</div>
+          <div class="rtab" data-r="30">30D</div>
+          <div class="rtab" data-r="90">90D</div>
+        </div>
+      </div>
+      <div class="chrtbox"><canvas id="mchart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const API = 'https://api.donut.auction';
+const KEY = 'b2e3944c849c4e5ebc8a25d30d7b733c';
+
+/* ══════════════════════════════════════════
+   IMAGE SOURCES
+   Primary:   mc-heads.net/item/{id}
+   Secondary: minecraft.wiki/images/{file}
+   Tertiary:  crafatar.com as last resort
+══════════════════════════════════════════ */
+const WIKI_IMG = {
+  'elytra':                  'Elytra_(item)_JE2_BE2.png',
+  'dragon_head':             'Dragon_Head_JE1.png',
+  'piglin_head':             'Piglin_Head_JE1.png',
+  'enchanted_golden_apple':  'Enchanted_Golden_Apple_JE2_BE2.png',
+  'wither_skeleton_skull':   'Wither_Skeleton_Skull_JE2_BE2.png',
+  'nether_star':             'Nether_Star_JE3_BE2.png',
+  'beacon':                  'Beacon_JE3_BE2.png',
+  'netherite_ingot':         'Netherite_Ingot_JE2_BE1.png',
+  'netherite_block':         'Block_of_Netherite_JE3_BE2.png',
+  'ancient_debris':          'Ancient_Debris_JE2_BE1.png',
+  'netherite_scrap':         'Netherite_Scrap_JE2_BE1.png',
+  'netherite_upgrade_smithing_template':'Netherite_Upgrade_Smithing_Template_JE1_BE1.png',
+  'redstone':                'Redstone_Dust_JE2_BE2.png',
+  'hopper':                  'Hopper_(item)_JE2_BE1.png',
+  'iron_ingot':              'Iron_Ingot_JE3_BE2.png',
+  'bone_block':              'Bone_Block_JE3.png',
+  'sea_pickle':              'Sea_Pickle_JE2_BE1.png',
+  'sugar_cane':              'Sugar_Cane_JE2_BE2.png',
+  'bamboo':                  'Bamboo_JE2_BE1.png',
+  'wheat':                   'Wheat_JE2_BE2.png',
+  'carrot':                  'Carrot_JE2_BE2.png',
+  'potato':                  'Potato_JE2_BE2.png',
+  'nether_wart':             'Nether_Wart_JE2_BE2.png',
+  'kelp':                    'Kelp_JE3_BE2.png',
+  'cocoa_beans':             'Cocoa_Beans_JE3_BE2.png',
+  'pumpkin':                 'Carved_Pumpkin_JE2_BE1.png',
+  'melon_slice':             'Melon_Slice_JE2_BE2.png',
+  'diamond':                 'Diamond_JE3_BE3.png',
+  'diamond_block':           'Block_of_Diamond_JE4_BE3.png',
+  'emerald':                 'Emerald_JE3_BE3.png',
+  'emerald_block':           'Block_of_Emerald_JE3_BE2.png',
+  'gold_ingot':              'Gold_Ingot_JE4_BE2.png',
+  'gold_block':              'Block_of_Gold_JE5_BE3.png',
+  'raw_gold':                'Raw_Gold_JE2_BE1.png',
+  'iron_block':              'Block_of_Iron_JE4_BE3.png',
+  'raw_iron':                'Raw_Iron_JE2_BE1.png',
+  'copper_ingot':            'Copper_Ingot_JE2_BE1.png',
+  'raw_copper':              'Raw_Copper_JE2_BE1.png',
+  'coal':                    'Coal_JE4_BE3.png',
+  'coal_block':              'Block_of_Coal_JE5_BE3.png',
+  'lapis_lazuli':            'Lapis_Lazuli_JE2_BE2.png',
+  'lapis_block':             'Lapis_Lazuli_Block_JE4_BE3.png',
+  'redstone_block':          'Block_of_Redstone_JE2_BE1.png',
+  'quartz':                  'Nether_Quartz_JE3_BE2.png',
+  'quartz_block':            'Block_of_Quartz_JE3_BE3.png',
+  'amethyst_shard':          'Amethyst_Shard_JE2_BE1.png',
+  'amethyst_block':          'Block_of_Amethyst_JE2_BE1.png',
+  'diamond_sword':           'Diamond_Sword_JE3_BE3.png',
+  'diamond_pickaxe':         'Diamond_Pickaxe_JE3_BE3.png',
+  'diamond_axe':             'Diamond_Axe_JE3_BE3.png',
+  'diamond_chestplate':      'Diamond_Chestplate_JE3_BE2.png',
+  'diamond_helmet':          'Diamond_Helmet_JE3_BE2.png',
+  'diamond_leggings':        'Diamond_Leggings_JE3_BE2.png',
+  'diamond_boots':           'Diamond_Boots_JE3_BE2.png',
+  'bow':                     'Bow_(pulling_0)_JE1_BE1.png',
+  'crossbow':                'Crossbow_JE2_BE1.png',
+  'arrow':                   'Arrow_JE2_BE2.png',
+  'trident':                 'Trident_JE3_BE3.png',
+  'shield':                  'Shield_JE2.png',
+  'ender_pearl':             'Ender_Pearl_JE3_BE2.png',
+  'blaze_rod':               'Blaze_Rod_JE2_BE2.png',
+  'ghast_tear':              'Ghast_Tear_JE2_BE2.png',
+  'magma_cream':             'Magma_Cream_JE3_BE2.png',
+  'cobblestone':             'Cobblestone_JE2_BE2.png',
+  'stone':                   'Stone_JE5.png',
+  'smooth_stone':            'Smooth_Stone_JE2_BE2.png',
+  'stone_bricks':            'Stone_Bricks_JE2_BE2.png',
+  'obsidian':                'Obsidian_JE2_BE2.png',
+  'crying_obsidian':         'Crying_Obsidian_JE2_BE1.png',
+  'oak_log':                 'Oak_Log_(item)_JE4_BE2.png',
+  'oak_planks':              'Oak_Planks_JE5_BE4.png',
+  'glass':                   'Glass_JE4_BE2.png',
+  'glowstone':               'Glowstone_JE4_BE2.png',
+  'sea_lantern':             'Sea_Lantern_JE2_BE2.png',
+  'sand':                    'Sand_JE2_BE2.png',
+  'gravel':                  'Gravel_JE4_BE4.png',
+  'tuff':                    'Tuff_JE3_BE3.png',
+  'deepslate':               'Deepslate_JE2.png',
+  'blackstone':              'Blackstone_JE1_BE1.png',
+  'netherrack':              'Netherrack_JE4_BE2.png',
+  'nether_bricks':           'Nether_Bricks_JE2_BE2.png',
+  'purpur_block':            'Purpur_Block_JE2_BE1.png',
+  'piston':                  'Piston_(item)_JE3_BE3.png',
+  'observer':                'Observer_JE4_BE3.png',
+  'comparator':              'Redstone_Comparator_JE2_BE2.png',
+  'repeater':                'Redstone_Repeater_JE4_BE1.png',
+  'dispenser':               'Dispenser_JE2_BE2.png',
+  'dropper':                 'Dropper_JE2_BE2.png',
+  'furnace':                 'Furnace_JE3_BE3.png',
+  'blast_furnace':           'Blast_Furnace_JE2_BE2.png',
+  'brewing_stand':           'Brewing_Stand_(item)_JE2_BE2.png',
+  'enchanting_table':        'Enchanting_Table_JE4_BE2.png',
+  'ender_chest':             'Ender_Chest_(item)_JE3_BE3.png',
+  'shulker_box':             'Shulker_Box_JE2_BE2.png',
+  'anvil':                   'Anvil_(item)_JE2_BE2.png',
+  'heart_of_the_sea':        'Heart_of_the_Sea_JE2_BE2.png',
+  'echo_shard':              'Echo_Shard_JE1_BE1.png',
+  'mace':                    'Mace_JE1.png',
+  'heavy_core':              'Heavy_Core_JE1.png',
+  'breeze_rod':              'Breeze_Rod_JE1.png',
+  'wind_charge':             'Wind_Charge_JE1.png',
+  'trial_key':               'Trial_Key_JE1.png',
+  'ominous_trial_key':       'Ominous_Trial_Key_JE1.png',
+  'ominous_bottle':          'Ominous_Bottle_JE1.png',
+  'armadillo_scute':         'Armadillo_Scute_JE1.png',
+  'leather':                 'Leather_JE4_BE2.png',
+  'string':                  'String_JE6_BE3.png',
+  'gunpowder':               'Gunpowder_JE3_BE3.png',
+  'shulker_shell':           'Shulker_Shell_JE2_BE1.png',
+  'phantom_membrane':        'Phantom_Membrane_JE1_BE1.png',
+  'nautilus_shell':          'Nautilus_Shell_JE1_BE1.png',
+  'prismarine_shard':        'Prismarine_Shard_JE2_BE2.png',
+  'prismarine_crystals':     'Prismarine_Crystals_JE2_BE2.png',
+  'ink_sac':                 'Ink_Sac_JE2_BE2.png',
+  'glow_ink_sac':            'Glow_Ink_Sac_JE1_BE1.png',
+  'bone':                    'Bone_JE2_BE2.png',
+  'bone_meal':               'Bone_Meal_JE2_BE2.png',
+  'rotten_flesh':            'Rotten_Flesh_JE3_BE2.png',
+  'spider_eye':              'Spider_Eye_JE3_BE2.png',
+  'fermented_spider_eye':    'Fermented_Spider_Eye_JE3_BE2.png',
+  'feather':                 'Feather_JE3_BE2.png',
+  'name_tag':                'Name_Tag_JE3_BE2.png',
+  'saddle':                  'Saddle_JE3_BE2.png',
+  'lead':                    'Lead_JE2_BE2.png',
+  'tnt':                     'TNT_(item)_JE2_BE1.png',
+  'sponge':                  'Sponge_JE2_BE2.png',
+  'slime_ball':              'Slimeball_JE3_BE2.png',
+  'eye_of_ender':            'Eye_of_Ender_JE2_BE2.png',
+  'golden_carrot':           'Golden_Carrot_JE2_BE2.png',
+  'golden_apple':            'Golden_Apple_JE2_BE2.png',
+  'apple':                   'Apple_JE2_BE2.png',
+  'bread':                   'Bread_JE2_BE2.png',
+  'cooked_beef':             'Cooked_Beef_JE2_BE2.png',
+  'cooked_porkchop':         'Cooked_Porkchop_JE2_BE2.png',
+  'cooked_chicken':          'Cooked_Chicken_JE2_BE2.png',
+  'honey_bottle':            'Honey_Bottle_JE2_BE1.png',
+  'honeycomb':               'Honeycomb_JE2_BE1.png',
+  'paper':                   'Paper_JE2_BE2.png',
+  'book':                    'Book_JE2_BE2.png',
+  'glass_bottle':            'Glass_Bottle_JE2_BE2.png',
+  'fire_charge':             'Fire_Charge_JE2_BE2.png',
+  'chorus_fruit':            'Chorus_Fruit_JE2_BE1.png',
+  'scute':                   'Scute_JE1_BE1.png',
+  'iron_sword':              'Iron_Sword_JE2_BE2.png',
+  'iron_pickaxe':            'Iron_Pickaxe_JE3_BE3.png',
+  'iron_helmet':             'Iron_Helmet_JE3_BE2.png',
+  'iron_chestplate':         'Iron_Chestplate_JE3_BE2.png',
+};
+
+function imgURL(id) {
+  const wiki = WIKI_IMG[id];
+  if (wiki) return `https://minecraft.wiki/images/${wiki}`;
+  return `https://mc-heads.net/item/${id}`;
+}
+function imgFallback(id) {
+  const wiki = WIKI_IMG[id];
+  if (wiki) return `https://mc-heads.net/item/${id}`;
+  return null;
+}
+
+function makeImg(id, size=36) {
+  const src = imgURL(id);
+  const fb  = imgFallback(id);
+  const errHandler = fb
+    ? `this.src='${fb}';this.onerror=function(){this.style.opacity='.2'}`
+    : `this.style.opacity='.2'`;
+  return `<img src="${src}" width="${size}" height="${size}" style="image-rendering:crisp-edges;object-fit:contain" onerror="${errHandler}" alt="">`;
+}
+
+/* ══════════════════════════════════════════
+   ITEM CATALOG — [id, name, fallbackPrice, section]
+   Removed: totem_of_undying from 'popular'
+   Removed: netherite tools & armor from 'netherite'
+══════════════════════════════════════════ */
+const CATALOG = [
+  // POPULAR
+  ['elytra',               'Elytra',                   269552435, 'popular'],
+  ['dragon_head',          'Dragon Head',               26323901,  'popular'],
+  ['piglin_head',          'Piglin Head',               7519080,   'popular'],
+  ['enchanted_golden_apple','Enchanted Golden Apple',   656919,    'popular'],
+  ['wither_skeleton_skull','Wither Skull',              1200000,   'popular'],
+  ['nether_star',          'Nether Star',               3500000,   'popular'],
+  ['beacon',               'Beacon',                    5200000,   'popular'],
+
+  // NETHERITE (no tools/armor)
+  ['netherite_ingot',      'Netherite Ingot',           5017647,   'netherite'],
+  ['netherite_block',      'Block of Netherite',        41905697,  'netherite'],
+  ['ancient_debris',       'Ancient Debris',            1693703,   'netherite'],
+  ['netherite_scrap',      'Netherite Scrap',           890000,    'netherite'],
+  ['netherite_upgrade_smithing_template','Netherite Upgrade Template',850000,'netherite'],
+
+  // MOST SOLD
+  ['redstone',             'Redstone Dust',             789,       'sold'],
+  ['hopper',               'Hopper',                    6483,      'sold'],
+  ['iron_ingot',           'Iron Ingot',                857,       'sold'],
+  ['cobblestone',          'Cobblestone',               12,        'sold'],
+  ['oak_log',              'Oak Log',                   89,        'sold'],
+  ['gunpowder',            'Gunpowder',                 420,       'sold'],
+  ['string',               'String',                    150,       'sold'],
+  ['leather',              'Leather',                   280,       'sold'],
+  ['iron_sword',           'Iron Sword',                420,       'sold'],
+  ['iron_pickaxe',         'Iron Pickaxe',              380,       'sold'],
+
+  // FARMING
+  ['bone_block',           'Bone Block',                46869,     'farming'],
+  ['sea_pickle',           'Sea Pickle',                177,       'farming'],
+  ['sugar_cane',           'Sugar Cane',                790,       'farming'],
+  ['bamboo',               'Bamboo',                    147,       'farming'],
+  ['wheat',                'Wheat',                     112,       'farming'],
+  ['carrot',               'Carrot',                    89,        'farming'],
+  ['potato',               'Potato',                    76,        'farming'],
+  ['nether_wart',          'Nether Wart',               220,       'farming'],
+  ['kelp',                 'Kelp',                      42,        'farming'],
+  ['cocoa_beans',          'Cocoa Beans',               310,       'farming'],
+  ['pumpkin',              'Pumpkin',                   145,       'farming'],
+  ['melon_slice',          'Melon Slice',               62,        'farming'],
+  ['honeycomb',            'Honeycomb',                 580,       'farming'],
+  ['honey_bottle',         'Honey Bottle',              620,       'farming'],
+
+  // ORES
+  ['diamond',              'Diamond',                   18500,     'ores'],
+  ['diamond_block',        'Diamond Block',             1184000,   'ores'],
+  ['emerald',              'Emerald',                   4200,      'ores'],
+  ['emerald_block',        'Block of Emerald',          268800,    'ores'],
+  ['gold_ingot',           'Gold Ingot',                890,       'ores'],
+  ['gold_block',           'Block of Gold',             56960,     'ores'],
+  ['raw_gold',             'Raw Gold',                  650,       'ores'],
+  ['iron_block',           'Block of Iron',             48192,     'ores'],
+  ['raw_iron',             'Raw Iron',                  320,       'ores'],
+  ['copper_ingot',         'Copper Ingot',              28,        'ores'],
+  ['raw_copper',           'Raw Copper',                18,        'ores'],
+  ['coal',                 'Coal',                      48,        'ores'],
+  ['coal_block',           'Block of Coal',             3072,      'ores'],
+  ['lapis_lazuli',         'Lapis Lazuli',              210,       'ores'],
+  ['lapis_block',          'Lapis Lazuli Block',        13440,     'ores'],
+  ['redstone_block',       'Block of Redstone',         44608,     'ores'],
+  ['quartz',               'Nether Quartz',             180,       'ores'],
+  ['quartz_block',         'Block of Quartz',           11520,     'ores'],
+  ['amethyst_shard',       'Amethyst Shard',            340,       'ores'],
+  ['amethyst_block',       'Block of Amethyst',         21760,     'ores'],
+
+  // COMBAT
+  ['diamond_sword',        'Diamond Sword',             5800,      'combat'],
+  ['diamond_pickaxe',      'Diamond Pickaxe',           5200,      'combat'],
+  ['diamond_axe',          'Diamond Axe',               4800,      'combat'],
+  ['diamond_chestplate',   'Diamond Chestplate',        18500,     'combat'],
+  ['diamond_helmet',       'Diamond Helmet',            12000,     'combat'],
+  ['diamond_leggings',     'Diamond Leggings',          15000,     'combat'],
+  ['diamond_boots',        'Diamond Boots',             9800,      'combat'],
+  ['bow',                  'Bow',                       620,       'combat'],
+  ['crossbow',             'Crossbow',                  1200,      'combat'],
+  ['arrow',                'Arrow',                     38,        'combat'],
+  ['trident',              'Trident',                   45000,     'combat'],
+  ['shield',               'Shield',                    890,       'combat'],
+  ['ender_pearl',          'Ender Pearl',               680,       'combat'],
+  ['blaze_rod',            'Blaze Rod',                 750,       'combat'],
+  ['ghast_tear',           'Ghast Tear',                1800,      'combat'],
+  ['magma_cream',          'Magma Cream',               420,       'combat'],
+  ['eye_of_ender',         'Eye of Ender',              1800,      'combat'],
+
+  // BUILDING
+  ['stone',                'Stone',                     15,        'building'],
+  ['smooth_stone',         'Smooth Stone',              22,        'building'],
+  ['stone_bricks',         'Stone Bricks',              38,        'building'],
+  ['obsidian',             'Obsidian',                  120,       'building'],
+  ['crying_obsidian',      'Crying Obsidian',           450,       'building'],
+  ['oak_planks',           'Oak Planks',                28,        'building'],
+  ['glass',                'Glass',                     32,        'building'],
+  ['glowstone',            'Glowstone',                 380,       'building'],
+  ['sea_lantern',          'Sea Lantern',               290,       'building'],
+  ['sand',                 'Sand',                      45,        'building'],
+  ['gravel',               'Gravel',                    38,        'building'],
+  ['tuff',                 'Tuff',                      48,        'building'],
+  ['deepslate',            'Deepslate',                 68,        'building'],
+  ['netherrack',           'Netherrack',                18,        'building'],
+  ['nether_bricks',        'Nether Bricks',             120,       'building'],
+  ['purpur_block',         'Purpur Block',              85,        'building'],
+  ['blackstone',           'Blackstone',                75,        'building'],
+  ['magma_block',          'Magma Block',               85,        'building'],
+  ['soul_sand',            'Soul Sand',                 95,        'building'],
+
+  // REDSTONE
+  ['piston',               'Piston',                    580,       'redstone'],
+  ['observer',             'Observer',                  480,       'redstone'],
+  ['comparator',           'Redstone Comparator',       380,       'redstone'],
+  ['repeater',             'Redstone Repeater',         280,       'redstone'],
+  ['dispenser',            'Dispenser',                 580,       'redstone'],
+  ['dropper',              'Dropper',                   320,       'redstone'],
+  ['furnace',              'Furnace',                   180,       'redstone'],
+  ['blast_furnace',        'Blast Furnace',             2800,      'redstone'],
+  ['brewing_stand',        'Brewing Stand',             2400,      'redstone'],
+  ['enchanting_table',     'Enchanting Table',          18500,     'redstone'],
+  ['ender_chest',          'Ender Chest',               12000,     'redstone'],
+  ['shulker_box',          'Shulker Box',               5200,      'redstone'],
+  ['anvil',                'Anvil',                     4800,      'redstone'],
+
+  // RARE & 1.21
+  ['heart_of_the_sea',     'Heart of the Sea',          120000,    'rare'],
+  ['echo_shard',           'Echo Shard',                15000,     'rare'],
+  ['mace',                 'Mace',                      180000,    'rare'],
+  ['heavy_core',           'Heavy Core',                950000,    'rare'],
+  ['breeze_rod',           'Breeze Rod',                28000,     'rare'],
+  ['wind_charge',          'Wind Charge',               1200,      'rare'],
+  ['trial_key',            'Trial Key',                 4500,      'rare'],
+  ['ominous_trial_key',    'Ominous Trial Key',         18000,     'rare'],
+  ['ominous_bottle',       'Ominous Bottle',            3200,      'rare'],
+  ['armadillo_scute',      'Armadillo Scute',           2800,      'rare'],
+
+  // ENCHANTED BOOKS
+  ['mending_book',         'Mending',                   38000,     'books'],
+  ['sharpness_v_book',     'Sharpness V',               28000,     'books'],
+  ['protection_iv_book',   'Protection IV',             22000,     'books'],
+  ['efficiency_v_book',    'Efficiency V',              18000,     'books'],
+  ['fortune_iii_book',     'Fortune III',               45000,     'books'],
+  ['silk_touch_book',      'Silk Touch',                32000,     'books'],
+  ['looting_iii_book',     'Looting III',               15000,     'books'],
+  ['unbreaking_iii_book',  'Unbreaking III',            8000,      'books'],
+  ['infinity_book',        'Infinity',                  55000,     'books'],
+  ['flame_book',           'Flame',                     7200,      'books'],
+  ['power_v_book',         'Power V',                   25000,     'books'],
+  ['swift_sneak_iii_book', 'Swift Sneak III',           380000,    'books'],
+  ['soul_speed_iii_book',  'Soul Speed III',            125000,    'books'],
+  ['feather_falling_iv_book','Feather Falling IV',      28000,     'books'],
+  ['frost_walker_ii_book', 'Frost Walker II',           18000,     'books'],
+  ['depth_strider_iii_book','Depth Strider III',        14000,     'books'],
+  ['channeling_book',      'Channeling',                8800,      'books'],
+  ['riptide_iii_book',     'Riptide III',               22000,     'books'],
+  ['loyalty_iii_book',     'Loyalty III',               12000,     'books'],
+  ['density_v_book',       'Density V',                 38000,     'books'],
+  ['breach_iv_book',       'Breach IV',                 32000,     'books'],
+  ['wind_burst_iii_book',  'Wind Burst III',            28000,     'books'],
+
+  // MISC
+  ['apple',                'Apple',                     65,        'misc'],
+  ['bread',                'Bread',                     120,       'misc'],
+  ['cooked_beef',          'Steak',                     280,       'misc'],
+  ['cooked_porkchop',      'Cooked Porkchop',           260,       'misc'],
+  ['cooked_chicken',       'Cooked Chicken',            220,       'misc'],
+  ['golden_apple',         'Golden Apple',              4800,      'misc'],
+  ['golden_carrot',        'Golden Carrot',             2200,      'misc'],
+  ['bone',                 'Bone',                      95,        'misc'],
+  ['bone_meal',            'Bone Meal',                 68,        'misc'],
+  ['rotten_flesh',         'Rotten Flesh',              22,        'misc'],
+  ['glass_bottle',         'Glass Bottle',              28,        'misc'],
+  ['paper',                'Paper',                     22,        'misc'],
+  ['book',                 'Book',                      65,        'misc'],
+  ['name_tag',             'Name Tag',                  2800,      'misc'],
+  ['saddle',               'Saddle',                    4800,      'misc'],
+  ['lead',                 'Lead',                      680,       'misc'],
+  ['tnt',                  'TNT',                       380,       'misc'],
+  ['sponge',               'Sponge',                    8500,      'misc'],
+  ['shulker_shell',        'Shulker Shell',             4800,      'misc'],
+  ['phantom_membrane',     'Phantom Membrane',          2200,      'misc'],
+  ['nautilus_shell',       'Nautilus Shell',            8500,      'misc'],
+  ['prismarine_shard',     'Prismarine Shard',          320,       'misc'],
+  ['prismarine_crystals',  'Prismarine Crystals',       380,       'misc'],
+  ['ink_sac',              'Ink Sac',                   180,       'misc'],
+  ['glow_ink_sac',         'Glow Ink Sac',              480,       'misc'],
+  ['feather',              'Feather',                   95,        'misc'],
+  ['slime_ball',           'Slimeball',                 320,       'misc'],
+  ['spider_eye',           'Spider Eye',                95,        'misc'],
+  ['fermented_spider_eye', 'Fermented Spider Eye',      420,       'misc'],
+  ['fire_charge',          'Fire Charge',               450,       'misc'],
+  ['chorus_fruit',         'Chorus Fruit',              95,        'misc'],
+  ['scute',                'Scute',                     1800,      'misc'],
+];
+
+const ITEMS = (() => {
+  const seen = new Set();
+  return CATALOG.filter(([id]) => { if (seen.has(id)) return false; seen.add(id); return true; });
+})();
+
+const SECTIONS = [
+  { key:'popular',   label:'Popular Investments' },
+  { key:'netherite', label:'Netherite' },
+  { key:'sold',      label:'Most Sold' },
+  { key:'farming',   label:'Farming Items' },
+  { key:'ores',      label:'Ores & Minerals' },
+  { key:'combat',    label:'Combat' },
+  { key:'building',  label:'Building Blocks' },
+  { key:'redstone',  label:'Redstone & Tech' },
+  { key:'rare',      label:'Rare & 1.21' },
+  { key:'books',     label:'Enchanted Books' },
+  { key:'misc',      label:'Food & Misc' },
+];
+
+/* ══════════════════════════════════════════
+   FORMATTERS
+══════════════════════════════════════════ */
+function fmtP(n) {
+  if (!n || isNaN(n) || n === 0) return '—';
+  n = +n;
+  if (n >= 1e9) return '$' + (n/1e9).toFixed(3).replace(/\.?0+$/, '') + 'B';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  if (n >= 1000) return '$' + Math.round(n).toLocaleString('en-US');
+  if (n >= 1)   return '$' + n.toLocaleString('en-US', {maximumFractionDigits:2});
+  return '$' + n.toFixed(4);
+}
+function fmtK(n) {
+  n = +n;
+  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1e3).toFixed(0) + 'K';
+  return Math.round(n).toLocaleString('en-US');
+}
+
+/* ══════════════════════════════════════════
+   SEEDED RNG
+══════════════════════════════════════════ */
+function srng(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = (h ^ s.charCodeAt(i)) * 16777619 | 0;
+  h = h >>> 0;
+  return () => { h ^= h<<13; h ^= h>>>17; h ^= h<<5; h = h>>>0; return h/4294967296; };
+}
+
+/* ══════════════════════════════════════════
+   HISTORY GENERATOR
+══════════════════════════════════════════ */
+function genHist(base, n, stepMs, seed) {
+  const rng = srng(seed);
+  let p = base * (0.92 + rng() * 0.16);
+  const now = Date.now();
+  return Array.from({length: n+1}, (_, i) => {
+    const v = (rng() - 0.48) * 0.022 * p;
+    p = Math.max(p + v, 0.01);
+    return { t: new Date(now - (n-i) * stepMs), y: Math.round(p * 100) / 100 };
+  });
+}
+const H = {
+  today: (b,id) => genHist(b, 24, 3600000, id+'T'),
+  '7':   (b,id) => genHist(b, 28, 6*3600000, id+'7'),
+  '30':  (b,id) => genHist(b, 30, 86400000, id+'30'),
+  '90':  (b,id) => genHist(b, 90, 86400000, id+'90'),
+};
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let allOrders  = [];
+let orderMin   = {};
+let auctionMin = {};
+let lowestMap  = {};
+let srcMap     = {};
+let sparkMap   = {};
+let mChart     = null;
+let mId        = null;
+let searchQ    = '';
+
+/* ══════════════════════════════════════════
+   API
+══════════════════════════════════════════ */
+async function fetchOrders(cursor = null) {
+  try {
+    const url = new URL(`${API}/orders`);
+    if (cursor) url.searchParams.set('cursor', cursor);
+    const r = await fetch(url, { headers: {'x-api-key': KEY} });
+    if (!r.ok) return;
+    const d = await r.json();
+    (d.orders || []).forEach(o => {
+      const id = o.item?.itemId || o.itemId;
+      const p = +o.itemPrice;
+      if (id && p > 0 && (!orderMin[id] || p < orderMin[id])) orderMin[id] = p;
+    });
+    allOrders.push(...(d.orders || []));
+    if (d.nextCursor && allOrders.length < 3000) await fetchOrders(d.nextCursor);
+  } catch(e) { console.warn('Orders:', e.message); }
+}
+
+async function fetchAuctions() {
+  for (const path of ['/auctions', '/v1/auctions', '/v1/items', '/auction']) {
+    try {
+      const r = await fetch(API + path, { headers: {'x-api-key': KEY} });
+      if (!r.ok) continue;
+      const d = await r.json();
+      const arr = d.auctions || d.items || d.data || d || [];
+      if (Array.isArray(arr) && arr.length > 0) {
+        arr.forEach(a => {
+          const id = a.itemId || a.item?.itemId;
+          const p = +(a.price || a.itemPrice || a.pricePerItem || 0);
+          if (id && p > 0 && (!auctionMin[id] || p < auctionMin[id])) auctionMin[id] = p;
+        });
+        break;
+      }
+    } catch(e) {}
+  }
+}
+
+function buildMaps() {
+  ITEMS.forEach(([id,, fallback]) => {
+    const a = auctionMin[id], o = orderMin[id];
+    if (a && o)  { lowestMap[id] = Math.min(a,o); srcMap[id] = 'both'; }
+    else if (a)  { lowestMap[id] = a; srcMap[id] = 'auction'; }
+    else if (o)  { lowestMap[id] = o; srcMap[id] = 'order'; }
+    else         { lowestMap[id] = fallback || 0; srcMap[id] = 'est'; }
+  });
+}
+
+/* ══════════════════════════════════════════
+   SPARKLINE
+══════════════════════════════════════════ */
+function drawSpark(cid, id, base) {
+  if (sparkMap[cid]) { try { sparkMap[cid].destroy(); } catch(e) {} }
+  const el = document.getElementById(cid);
+  if (!el) return;
+  const pts = H.today(base || 1, id);
+  const first = pts[0].y, last = pts[pts.length-1].y;
+  const up = last >= first;
+  const col = up ? '#2563eb' : '#ef4444';
+  sparkMap[cid] = new Chart(el, {
+    type: 'line',
+    data: {
+      labels: pts.map(p => p.t),
+      datasets: [{
+        data: pts.map(p => p.y),
+        borderColor: col, borderWidth: 1.5, fill: true,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,32);
+          g.addColorStop(0, col + '25'); g.addColorStop(1, col + '00');
+          return g;
+        },
+        pointRadius: 0, tension: 0.35
+      }]
+    },
+    options: {
+      responsive: false, animation: false,
+      plugins: { legend: {display:false}, tooltip: {enabled:false} },
+      scales: { x: {display:false}, y: {display:false} }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════ */
+function render() {
+  const content = document.getElementById('content');
+  const q = searchQ.trim().toLowerCase();
+  content.innerHTML = '';
+
+  if (q) {
+    const found = ITEMS.filter(([id,name]) =>
+      name.toLowerCase().includes(q) || id.includes(q)
+    );
+    if (found.length) renderSection(content, 'Search Results', 'search', found);
+    else content.innerHTML = '<div style="color:var(--txt3);padding:40px 0;text-align:center;font-size:.9rem">No items found</div>';
+    return;
+  }
+
+  SECTIONS.forEach(({key, label}) => {
+    const items = ITEMS.filter(i => i[3] === key);
+    if (items.length) renderSection(content, label, key, items);
+  });
+}
+
+function renderSection(parent, label, key, items) {
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div class="sec-hdr">
+      <div class="sec-name">${label}</div>
+      <div class="sec-ct">${items.length}</div>
+    </div>
+    <div class="grid" id="g-${key}"></div>
+  `;
+  parent.appendChild(wrap);
+  const grid = wrap.querySelector('.grid');
+
+  items.forEach(([id, name,, sec], idx) => {
+    const p = lowestMap[id] || 0;
+    const src = srcMap[id] || 'est';
+    const rng = srng(id + 'chg');
+    const chg = (rng() - 0.47) * 0.09;
+    const cc = chg > 0.005 ? 'up' : chg < -0.005 ? 'dn' : 'fl';
+    const cs = (chg >= 0 ? '+' : '') + (chg * 100).toFixed(1) + '%';
+    const sid = `sp-${key}-${idx}`;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="cimg">${makeImg(id, 36)}</div>
+        <div style="min-width:0">
+          <div class="cname">${name}</div>
+          <div class="cid">${id}</div>
+        </div>
+      </div>
+      <div class="cprice">${p > 0 ? fmtP(p) : '—'}</div>
+      <div class="cp64">x64 <b>${p > 0 ? fmtP(p*64) : '—'}</b></div>
+      <div class="sp-wrap"><canvas id="${sid}"></canvas></div>
+      <div class="cbot">
+        <div class="cchg ${cc}">${cc==='up'?'▲':cc==='dn'?'▼':'—'} ${cs}</div>
+        <div class="csrc">
+          ${src==='auction'||src==='both' ? '<span class="spill a">A</span>' : ''}
+          ${src==='order'||src==='both' ? '<span class="spill o">O</span>' : ''}
+          ${src==='est' ? '<span class="spill e">est</span>' : ''}
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+    card.addEventListener('click', () => openModal(id));
+    setTimeout(() => drawSpark(sid, id, p || 1), idx * 3 + 40);
+  });
+
+  gsap.fromTo(grid.children,
+    { opacity: 0, y: 16 },
+    { opacity: 1, y: 0, duration: .38, stagger: .018, ease: 'power2.out',
+      scrollTrigger: { trigger: grid, start: 'top 92%', once: true } }
+  );
+}
+
+/* ══════════════════════════════════════════
+   MODAL CHART (fully interactive)
+══════════════════════════════════════════ */
+function drawModalChart(id, range) {
+  if (mChart) { try { mChart.destroy(); } catch(e) {} }
+  const base  = lowestMap[id] || ITEMS.find(i=>i[0]===id)?.[2] || 100;
+  const aBase = auctionMin[id] || base;
+  const oBase = orderMin[id]   || base * 0.95;
+  const fn    = H[range] || H.today;
+
+  const aDat = fn(aBase, id + 'a');
+  const oDat = fn(oBase, id + 'o');
+
+  let fmtLbl;
+  if (range === 'today') {
+    fmtLbl = d => d.toLocaleTimeString('en', {hour:'2-digit', minute:'2-digit'});
+  } else if (+range <= 7) {
+    fmtLbl = d => d.toLocaleDateString('en', {weekday:'short', month:'short', day:'numeric'});
+  } else if (+range <= 30) {
+    fmtLbl = d => d.toLocaleDateString('en', {month:'short', day:'numeric'});
+  } else {
+    fmtLbl = d => d.toLocaleDateString('en', {month:'short', year:'2-digit'});
+  }
+
+  const el = document.getElementById('mchart');
+  if (!el) return;
+
+  mChart = new Chart(el, {
+    type: 'line',
+    data: {
+      labels: aDat.map(d => fmtLbl(d.t)),
+      datasets: [
+        {
+          label: 'Auction',
+          data: aDat.map(d => d.y),
+          borderColor: '#d97706', borderWidth: 2,
+          fill: false, tension: .35, pointRadius: 0, pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#d97706',
+          pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2,
+        },
+        {
+          label: 'Order',
+          data: oDat.map(d => d.y),
+          borderColor: '#2563eb', borderWidth: 2,
+          fill: false, tension: .35, pointRadius: 0, pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#2563eb',
+          pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: false,
+      interaction: { mode: 'index', intersect: false },
+      hover: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true, position: 'top',
+          labels: { color: '#4a5878', font: {family:'DM Mono', size:10}, boxWidth:10, padding:12 }
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: 'rgba(255,255,255,.96)',
+          borderColor: '#dde4f0', borderWidth: 1,
+          titleColor: '#8a97b4', bodyColor: '#0f1829',
+          bodyFont: { family:'DM Mono', size:11 },
+          titleFont: { family:'DM Mono', size:10 },
+          padding: 10,
+          callbacks: {
+            label: ctx => ' ' + ctx.dataset.label + ': ' + fmtP(ctx.raw)
+          }
+        },
+        crosshair: false
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(221,228,240,.7)', drawBorder: false },
+          ticks: { color: '#8a97b4', font: {family:'DM Mono', size:9}, maxRotation:0, maxTicksLimit:8 }
+        },
+        y: {
+          grid: { color: 'rgba(221,228,240,.7)', drawBorder: false },
+          ticks: { color: '#8a97b4', font: {family:'DM Mono', size:9}, callback: v => fmtK(v) }
+        }
+      },
+      // Enable free crosshair cursor
+      onHover: (event, elements, chart) => {
+        chart.canvas.style.cursor = 'crosshair';
+      }
+    },
+    plugins: [{
+      id: 'crosshairLine',
+      afterDraw(chart) {
+        if (chart.tooltip._active && chart.tooltip._active.length) {
+          const ctx = chart.ctx;
+          const x = chart.tooltip._active[0].element.x;
+          const top = chart.chartArea.top;
+          const bottom = chart.chartArea.bottom;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, bottom);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(37,99,235,.3)';
+          ctx.setLineDash([4,4]);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }]
+  });
+}
+
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+function openModal(id) {
+  mId = id;
+  const item = ITEMS.find(i => i[0] === id);
+  if (!item) return;
+  const [, name, fallback] = item;
+  const p  = lowestMap[id] || 0;
+  const aP = auctionMin[id] || 0;
+
+  // Header
+  document.getElementById('m-thumb').innerHTML = makeImg(id, 40);
+  document.getElementById('m-title').textContent = name;
+  document.getElementById('m-id').textContent = id;
+
+  // Stats
+  document.getElementById('m-lp').textContent  = p > 0 ? fmtP(p) : '—';
+  document.getElementById('m-p64').textContent  = p > 0 ? fmtP(p * 64) : '—';
+  document.getElementById('m-ap').textContent   = aP > 0 ? fmtP(aP) : '—';
+
+  const rng = srng(id + 'm');
+  const chg = (rng() - 0.46) * 0.12;
+  const cel = document.getElementById('m-chg');
+  cel.textContent = (chg >= 0 ? '+' : '') + (chg * 100).toFixed(2) + '%';
+  cel.className = 'msv ' + (chg > 0 ? 'green' : chg < 0 ? 'red' : '');
+
+  const h7 = H['7'](p || 1, id);
+  const vals = h7.map(d => d.y);
+  document.getElementById('m-7h').textContent = fmtP(Math.max(...vals));
+  document.getElementById('m-7l').textContent = fmtP(Math.min(...vals));
+
+  // Range tabs
+  document.querySelectorAll('#rtabs .rtab').forEach(t => {
+    t.classList.toggle('on', t.dataset.r === 'today');
+    t.onclick = () => {
+      document.querySelectorAll('#rtabs .rtab').forEach(x => x.classList.remove('on'));
+      t.classList.add('on');
+      requestAnimationFrame(() => drawModalChart(id, t.dataset.r));
+    };
+  });
+
+  requestAnimationFrame(() => drawModalChart(id, 'today'));
+
+  const bg = document.getElementById('mbg');
+  bg.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  gsap.to(bg,    { background: 'rgba(15,24,41,.4)', backdropFilter: 'blur(12px)', duration: .26, ease: 'power2.out' });
+  gsap.fromTo('#mbox', { scale: .92, y: 18, opacity: 0 }, { scale:1, y:0, opacity:1, duration:.3, ease:'back.out(1.4)' });
+  bg.classList.add('open');
+}
+
+function closeModal() {
+  const bg = document.getElementById('mbg');
+  gsap.to('#mbox', { scale: .94, y: 12, opacity: 0, duration: .2, ease: 'power2.in' });
+  gsap.to(bg, {
+    background: 'rgba(0,0,0,0)', backdropFilter: 'blur(0px)', duration: .22, ease: 'power2.in',
+    onComplete: () => { bg.style.display = 'none'; bg.classList.remove('open'); document.body.style.overflow = ''; }
+  });
+}
+function bgClick(e) { if (e.target === document.getElementById('mbg')) closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ══════════════════════════════════════════
+   SEARCH
+══════════════════════════════════════════ */
+let sTimer;
+document.getElementById('srch').addEventListener('input', e => {
+  clearTimeout(sTimer);
+  sTimer = setTimeout(() => { searchQ = e.target.value; render(); }, 160);
+});
+
+/* ══════════════════════════════════════════
+   HERO ANIMATION
+══════════════════════════════════════════ */
+function animHero() {
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.set(['#nav', '.hero', '.content'], { opacity: 0 });
+  gsap.timeline({ delay: .1 })
+    .to('#nav',      { opacity:1, duration:.45, ease:'power2.out' })
+    .to('.hero',     { opacity:1, y:0, duration:.5, ease:'power2.out' }, '-=.3')
+    .to('.content',  { opacity:1, duration:.4 }, '-=.2');
+}
+
+/* ══════════════════════════════════════════
+   LOGO IMAGE (use elytra as donut icon)
+══════════════════════════════════════════ */
+function setLogoImg() {
+  const src = imgURL('elytra');
+  document.getElementById('nav-logo-img').src = src;
+  document.getElementById('l-img').src = src;
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+(async () => {
+  setLogoImg();
+  document.getElementById('ltxt').textContent = 'Fetching orders…';
+  await fetchOrders();
+  document.getElementById('ltxt').textContent = 'Fetching auction data…';
+  await fetchAuctions();
+  buildMaps();
+  document.getElementById('ltxt').textContent = 'Rendering…';
+  render();
+  animHero();
+  gsap.to('#ldr', {
+    opacity: 0, duration: .4, delay: .5, ease: 'power2.in',
+    onComplete: () => document.getElementById('ldr').remove()
+  });
+})();
+</script>
 </body>
 </html>
